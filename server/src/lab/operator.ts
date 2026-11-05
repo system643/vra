@@ -86,7 +86,8 @@ export function writeOperatorMap(m: OperatorMap): OperatorMap {
 export function guessOperatorMap(tools: ToolInfo[]): OperatorMap {
   const find = (re: RegExp) => tools.find((t) => re.test(t.name))?.name;
   const m: OperatorMap = { verified: false, notes: "Proposition automatique : vérifier les arguments avec lab_operator_tools (schémas) puis enregistrer avec lab_operator_map." };
-  const head = find(/head.*pose|hmd.*pose|set_?head|set_?hmd/i);
+  // Built-in name in Operator v207: openxr_set_head_pose (absent on a real Quest, where the head follows the device).
+  const head = find(/openxr_set_head_pose/i) ?? find(/head.*pose|hmd.*pose|set_?head|set_?hmd/i);
   const ctrl = find(/controller.*pose|set_?controller|hand.*pose/i);
   const btn = find(/button|press|trigger|controller_?input|send_?input/i);
   const cap = find(/screenshot|capture|image|frame/i);

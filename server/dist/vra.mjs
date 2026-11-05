@@ -38424,6 +38424,8 @@ var CATALOG = [
   { id: "ue4ss", name: "RE-UE4SS", repo: "UE4SS-RE/RE-UE4SS", asset: /^UE4SS_v[\d.]+\.zip$/i, destination: "game_exe_dir", families: ["unreal"], officialPage: "https://github.com/UE4SS-RE/RE-UE4SS", postInstall: "Dumpers et Live View pour cartographier le jeu. En cas de plantage au d\xE9marrage : bUseUObjectArrayCache = false dans UE4SS-settings.ini.", license: "MIT" },
   { id: "gdre-tools", name: "GDRE Tools", repo: "GDRETools/gdsdecomp", asset: /windows.*\.zip$/i, destination: "tools", families: ["godot"], officialPage: "https://github.com/GDRETools/gdsdecomp", postInstall: "R\xE9cup\xE9rer le projet dans un dossier de VRA (jamais dans le jeu).", license: "MIT" },
   { id: "quakevr", name: "Quake VR", repo: "vittorioromeo/quakevr", asset: /\.zip$/i, destination: "tools", families: ["opensource_port"], officialPage: "https://github.com/vittorioromeo/quakevr", postInstall: "Copier ou pointer le dossier id1 du Quake achet\xE9 vers le dossier de Quake VR.", license: "GPL-2.0" },
+  { id: "meta-xr-operator", name: "Meta XR Operator (standalone)", destination: "tools", families: ["unreal", "unity_mono", "unity_il2cpp", "re_engine", "godot", "unknown"], officialPage: "https://developers.meta.com/horizon/documentation/unity/meta-xr-operator/connecting-ai-agents/", manual: "Distribu\xE9 par Meta hors GitHub (compte d\xE9veloppeur) : t\xE9l\xE9charger le .zip standalone, puis install_tool_plan tool_id=meta-xr-operator local_archive=<chemin du .zip>. Il est extrait dans le dossier tools de VRA, o\xF9 xr_sim_status le trouve.", postInstall: "Acc\xE8s direct pour Claude (facultatif) : claude mcp add meta-xr-operator <dossier>\\windows\\meta-xr-operator-mcp-proxy.exe", license: "licence Meta (ne pas redistribuer)" },
+  { id: "meta-xr-simulator", name: "Meta XR Simulator (standalone)", destination: "tools", families: ["unreal", "unity_mono", "unity_il2cpp", "re_engine", "godot", "unknown"], officialPage: "https://developers.meta.com/horizon/downloads/package/meta-xr-simulator-windows/", manual: "Installeur .msi de Meta : l'utilisateur le lance lui-m\xEAme (VRA ne lance jamais d'installeur). Ensuite xr_sim_status le d\xE9tecte via le registre OpenXR (AvailableRuntimes) ou VRA_XRSIM_JSON.", license: "licence Meta (ne pas redistribuer)" },
   { id: "geo-11", name: "geo-11", destination: "game_exe_dir", families: ["unknown", "aaa_proprietary", "unreal_legacy", "emulator", "creation"], officialPage: "https://helixmod.blogspot.com/2022/06/announcing-new-geo-11-3d-driver.html", manual: "Distribu\xE9 hors GitHub : t\xE9l\xE9charger depuis la page officielle, puis installer avec install_tool_plan en mode \xAB archive locale \xBB (local_archive)." },
   { id: "vivecraft", name: "Vivecraft", destination: "tools", families: ["java"], officialPage: "https://www.vivecraft.org/", manual: "Installer depuis le site officiel (installeur ou launcher compatible). VRA ne t\xE9l\xE9charge pas d'installeur ex\xE9cutable." },
   { id: "real-luke-ross", name: "R.E.A.L. VR (Luke Ross)", destination: "game_exe_dir", families: ["aaa_proprietary"], officialPage: "https://www.patreon.com/LukeRoss", manual: "Distribu\xE9 par l'auteur hors GitHub. Rappel : 6DOF sans contr\xF4leurs \u2192 palier, pas destination." },
@@ -40498,6 +40500,15 @@ function isRuntimeManifest(file3) {
   const j = readJsonSafe(file3);
   return !!(j && j.runtime && typeof j.runtime.library_path === "string");
 }
+function manifestMatchesPlatform(file3, platform = process.platform) {
+  const j = readJsonSafe(file3);
+  const lib = j?.api_layer?.library_path ?? j?.runtime?.library_path;
+  if (typeof lib !== "string") return false;
+  const ext = platform === "win32" ? /\.dll$/i : platform === "darwin" ? /\.dylib$/i : /\.so$/i;
+  if (!ext.test(lib)) return false;
+  const libPath = path18.isAbsolute(lib) ? lib : path18.join(path18.dirname(file3), lib);
+  return fs19.existsSync(libPath);
+}
 function isOperatorManifest(file3) {
   const j = readJsonSafe(file3);
   return !!(j && j.api_layer && j.api_layer.name === OPERATOR_LAYER);
@@ -40514,7 +40525,7 @@ function shallowFind(root, test, depth = 4, topFilter) {
     for (const e of entries) {
       const p = path18.join(dir, e.name);
       if (e.isDirectory() && d === 0 && topFilter && !topFilter.test(e.name)) continue;
-      if (e.isDirectory() && /^(node_modules|\.git|windows|winsxs|\$recycle\.bin)$/i.test(e.name) && d > 0) continue;
+      if (e.isDirectory() && /^(node_modules|\.git|winsxs|\$recycle\.bin)$/i.test(e.name) && d > 0) continue;
       if (e.isDirectory() && d < depth) walk2(p, d + 1);
       else if (e.isFile() && test(p)) out.push(p);
       if (out.length > 20) return;
@@ -40531,7 +40542,8 @@ var SEARCH_ROOTS = () => [
   { root: process.env["ProgramFiles(x86)"] ?? "", filter: META_DIRS },
   { root: process.env.USERPROFILE ? path18.join(process.env.USERPROFILE, "Downloads") : "", filter: META_DIRS },
   { root: process.env.USERPROFILE ? path18.join(process.env.USERPROFILE, "Desktop") : "", filter: META_DIRS },
-  { root: toolsDir() }
+  { root: toolsDir() },
+  { root: pluginRoot() }
 ].filter((x) => !!x.root && fs19.existsSync(x.root));
 async function findSimulatorRuntime(explicit) {
   if (explicit) return { json: isRuntimeManifest(explicit) ? path18.resolve(explicit) : null, source: "param\xE8tre", candidates: [explicit] };
@@ -40551,10 +40563,12 @@ async function findOperator(explicitDir) {
   const searchIn = roots.length ? roots : SEARCH_ROOTS();
   for (const { root, filter } of searchIn) {
     if (!fs19.existsSync(root)) continue;
-    const manifests = shallowFind(root, (f) => /\.json$/i.test(f) && /operator|apilayer|api_layer|metax/i.test(path18.basename(f)) && isOperatorManifest(f), 6, filter);
+    const all = shallowFind(root, (f) => /\.json$/i.test(f) && /operator|apilayer|api_layer|metax/i.test(path18.basename(f)) && isOperatorManifest(f), 6, filter);
+    const manifests = all.filter((m) => manifestMatchesPlatform(m));
     if (manifests.length) {
       const layerDir = path18.dirname(manifests[0]);
-      const proxyCands = [layerDir, path18.dirname(layerDir)].flatMap((d) => shallowFind(d, (f) => /meta-xr-operator-mcp-proxy(\.exe)?$/i.test(f), 2));
+      const proxyName = process.platform === "win32" ? /meta-xr-operator-mcp-proxy\.exe$/i : /meta-xr-operator-mcp-proxy$/i;
+      const proxyCands = [layerDir, path18.dirname(layerDir)].flatMap((d) => shallowFind(d, (f) => proxyName.test(f), 2));
       return { layerDir, manifest: manifests[0], proxy: proxyCands[0] ?? null };
     }
   }
@@ -43142,7 +43156,7 @@ function writeOperatorMap(m) {
 function guessOperatorMap(tools) {
   const find = (re) => tools.find((t) => re.test(t.name))?.name;
   const m = { verified: false, notes: "Proposition automatique : v\xE9rifier les arguments avec lab_operator_tools (sch\xE9mas) puis enregistrer avec lab_operator_map." };
-  const head = find(/head.*pose|hmd.*pose|set_?head|set_?hmd/i);
+  const head = find(/openxr_set_head_pose/i) ?? find(/head.*pose|hmd.*pose|set_?head|set_?hmd/i);
   const ctrl = find(/controller.*pose|set_?controller|hand.*pose/i);
   const btn = find(/button|press|trigger|controller_?input|send_?input/i);
   const cap = find(/screenshot|capture|image|frame/i);

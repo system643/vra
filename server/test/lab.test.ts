@@ -90,6 +90,15 @@ describe("casque simulé et SteamVR", () => {
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, "operator.json"), JSON.stringify({ file_format_version: "1.0.0", api_layer: { name: "XR_APILAYER_METAX_operator", library_path: "op.dll" } }));
     fs.writeFileSync(path.join(dir, "meta-xr-operator-mcp-proxy.exe"), "");
+    fs.writeFileSync(path.join(dir, "op.dll"), "");
+    // the real package also ships android/ and macos/ layers: they must be ignored on Windows
+    for (const [os_, lib] of [["android", "libop.so"], ["macos", "libop.dylib"]]) {
+      const d = path.join(WORK, "op", os_);
+      fs.mkdirSync(d, { recursive: true });
+      fs.writeFileSync(path.join(d, "XrApiLayer_METAX_operator.json"), JSON.stringify({ api_layer: { name: "XR_APILAYER_METAX_operator", library_path: `./${lib}` } }));
+      fs.writeFileSync(path.join(d, lib), "");
+      fs.writeFileSync(path.join(d, "meta-xr-operator-mcp-proxy"), "");
+    }
     const sim = path.join(WORK, "xrsim_runtime.json");
     fs.writeFileSync(sim, JSON.stringify({ runtime: { library_path: "sim.dll" } }));
     expect(isRuntimeManifest(sim)).toBe(true);

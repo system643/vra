@@ -16,6 +16,18 @@ Téléchargements officiels (installés par l'utilisateur, jamais par VRA) :
 - Simulateur : https://developers.meta.com/horizon/downloads/package/meta-xr-simulator-windows/
 - Operator : https://developers.meta.com/horizon/documentation/unity/meta-xr-operator/connecting-ai-agents/
 
+Installation sur le PC de test :
+- **Simulateur** : l'utilisateur lance lui-même le `.msi` de Meta (ex. `meta_xr_simulator_v207.1.msi`) ; VRA le détecte
+  ensuite via le registre OpenXR (`AvailableRuntimes`).
+- **Operator** : `install_tool_plan tool_id=meta-xr-operator local_archive=<…\meta-xr-operator-standalone-public-v207.0.1.zip>`
+  puis `install_tool_apply` → extrait dans le dossier `tools` de VRA ; `xr_sim_status` choisit la couche **windows**
+  (le paquet contient aussi android/ et macos/). Accès direct facultatif pour Claude :
+  `claude mcp add meta-xr-operator <…>\windows\meta-xr-operator-mcp-proxy.exe`.
+- Outil intégré connu de l'Operator v207 : `openxr_set_head_pose` (pose de la tête ; absent sur un vrai Quest). Les autres
+  noms se lisent avec `lab_operator_tools`.
+- Ces fichiers Meta ne se publient **jamais** sur GitHub (licence Meta ; le `.msi` dépasse aussi la limite de 100 Mo) : les
+  retélécharger ou les copier (clé USB, OneDrive) sur chaque PC.
+
 Si les dossiers ne sont pas trouvés automatiquement : `VRA_XRSIM_JSON=<.json du runtime du simulateur>` et
 `VRA_XR_OPERATOR_DIR=<dossier windows du paquet Operator>`.
 

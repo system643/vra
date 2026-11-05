@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
-import { toolsDir } from "../paths.js";
+import { pluginRoot, toolsDir } from "../paths.js";
 import { launchGame } from "../runtime.js";
 import { abs, pickMainExe, scanGame } from "../detect/scan.js";
 import { createBackup, restoreBackup, listBackups } from "../backup.js";
@@ -51,6 +51,17 @@ export function isRuntimeManifest(file: string): boolean {
   return !!(j && j.runtime && typeof j.runtime.library_path === "string");
 }
 
+/** True when the layer library named by the manifest exists next to it and suits this OS (.dll / .dylib / .so). */
+export function manifestMatchesPlatform(file: string, platform: NodeJS.Platform = process.platform): boolean {
+  const j = readJsonSafe(file);
+  const lib: unknown = j?.api_layer?.library_path ?? j?.runtime?.library_path;
+  if (typeof lib !== "string") return false;
+  const ext = platform === "win32" ? /\.dll$/i : platform === "darwin" ? /\.dylib$/i : /\.so$/i;
+  if (!ext.test(lib)) return false;
+  const libPath = path.isAbsolute(lib) ? lib : path.join(path.dirname(file), lib);
+  return fs.existsSync(libPath);
+}
+
 export function isOperatorManifest(file: string): boolean {
   const j = readJsonSafe(file);
   return !!(j && j.api_layer && j.api_layer.name === OPERATOR_LAYER);
@@ -69,7 +80,7 @@ function shallowFind(root: string, test: (f: string) => boolean, depth = 4, topF
     for (const e of entries) {
       const p = path.join(dir, e.name);
       if (e.isDirectory() && d === 0 && topFilter && !topFilter.test(e.name)) continue;
-      if (e.isDirectory() && /^(node_modules|\.git|windows|winsxs|\$recycle\.bin)$/i.test(e.name) && d > 0) continue;
+      if (e.isDirectory() && /^(node_modules|\.git|winsxs|\$recycle\.bin)$/i.test(e.name) && d > 0) continue;
       if (e.isDirectory() && d < depth) walk(p, d + 1);
       else if (e.isFile() && test(p)) out.push(p);
       if (out.length > 20) return;
@@ -90,6 +101,7 @@ const SEARCH_ROOTS = (): Array<{ root: string; filter?: RegExp }> =>
     { root: process.env.USERPROFILE ? path.join(process.env.USERPROFILE, "Downloads") : "", filter: META_DIRS },
     { root: process.env.USERPROFILE ? path.join(process.env.USERPROFILE, "Desktop") : "", filter: META_DIRS },
     { root: toolsDir() },
+    { root: pluginRoot() },
   ].filter((x) => !!x.root && fs.existsSync(x.root));
 
 export async function findSimulatorRuntime(explicit?: string): Promise<{ json: string | null; source: string; candidates: string[] }> {
@@ -111,10 +123,14 @@ export async function findOperator(explicitDir?: string): Promise<{ layerDir: st
   const searchIn = roots.length ? roots : SEARCH_ROOTS();
   for (const { root, filter } of searchIn) {
     if (!fs.existsSync(root)) continue;
-    const manifests = shallowFind(root, (f) => /\.json$/i.test(f) && /operator|apilayer|api_layer|metax/i.test(path.basename(f)) && isOperatorManifest(f), 6, filter);
+    const all = shallowFind(root, (f) => /\.json$/i.test(f) && /operator|apilayer|api_layer|metax/i.test(path.basename(f)) && isOperatorManifest(f), 6, filter);
+    // The standalone package ships android/, macos/ and windows/ layers: keep the one for this OS
+    // (its library must sit next to the manifest, since library_path is relative).
+    const manifests = all.filter((m) => manifestMatchesPlatform(m));
     if (manifests.length) {
       const layerDir = path.dirname(manifests[0]);
-      const proxyCands = [layerDir, path.dirname(layerDir)].flatMap((d) => shallowFind(d, (f) => /meta-xr-operator-mcp-proxy(\.exe)?$/i.test(f), 2));
+      const proxyName = process.platform === "win32" ? /meta-xr-operator-mcp-proxy\.exe$/i : /meta-xr-operator-mcp-proxy$/i;
+      const proxyCands = [layerDir, path.dirname(layerDir)].flatMap((d) => shallowFind(d, (f) => proxyName.test(f), 2));
       return { layerDir, manifest: manifests[0], proxy: proxyCands[0] ?? null };
     }
   }

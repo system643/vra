@@ -2,3 +2,8 @@ server/node_modules/
 evals/results/
 *.tmp-*
 .mcpb-cache/
+
+# Logiciels Meta téléchargés : ne jamais les publier (licence Meta, et le .msi dépasse 100 Mo)
+*.msi
+meta-xr-operator-standalone-*.zip
+meta-xr-operator-standalone-*/
