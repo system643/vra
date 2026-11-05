@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: skyrim-se
+description: "Skyrim Special Edition"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh

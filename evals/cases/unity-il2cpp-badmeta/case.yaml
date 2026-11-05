@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: unity-il2cpp-badmeta
+description: "Unity IL2CPP aux métadonnées illisibles"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh

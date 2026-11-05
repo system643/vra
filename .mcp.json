@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "vra": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/dist/vra.mjs"],
+      "env": {
+        "VRA_TOOL_FAMILIES": "adaptive",
+        "VRA_SCHEMA_PROFILE": "compact"
+      }
+    }
+  }
+}

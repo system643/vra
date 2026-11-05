@@ -1,0 +1,11 @@
+{
+  "name": "vra",
+  "displayName": "VRA — VR-ify Anything",
+  "version": "0.1.0",
+  "description": "Transforme un jeu plat en expérience VR (UEVR, Unity/BepInEx, REFramework, Godot, source ports…) : triage avec preuves, maximum visé par défaut, installation contrôlée et réversible, boucle de test en casque.",
+  "author": {
+    "name": "Quentin Artigala"
+  },
+  "license": "MIT",
+  "keywords": ["vr", "flat2vr", "uevr", "bepinex", "reframework", "godot", "modding", "virtual-desktop", "quest"]
+}

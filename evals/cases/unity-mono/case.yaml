@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: unity-mono
+description: "Unity Mono"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh

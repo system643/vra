@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: source2-vac
+description: "Source 2 avec VAC"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh

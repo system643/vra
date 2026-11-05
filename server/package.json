@@ -1,0 +1,31 @@
+{
+  "name": "vra-mcp-server",
+  "version": "0.1.0",
+  "description": "VRA (VR-ify Anything) MCP server: triage, plan and build flat-to-VR mods safely",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit && npm run bundle",
+    "test": "vitest run",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "bundle": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/vra.mjs --external:frida --banner:js=\"import { createRequire as __vraCreateRequire } from 'node:module'; const require = __vraCreateRequire(import.meta.url);\"",
+    "smoke": "node test/smoke.mjs",
+    "evals:generate": "node ../evals/generate.mjs"
+  },
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}

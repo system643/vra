@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: unknown-dx11
+description: "Moteur inconnu en DX11"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh

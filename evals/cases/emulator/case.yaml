@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: emulator
+description: "Émulateur"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh

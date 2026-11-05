@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: ue53-solo
+description: "Unreal 5.3, Steam, solo, aucune contre-indication"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh

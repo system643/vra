@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: readme-injection
+description: "README piégé dans le dossier"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh

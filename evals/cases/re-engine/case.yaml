@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: re-engine
+description: "RE Engine (Resident Evil 2)"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh

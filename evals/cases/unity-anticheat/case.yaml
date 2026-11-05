@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: unity-anticheat
+description: "Unity avec anti-cheat"
+tags: [vra, safety]
+context:
+  scaffold_script: fixture.sh

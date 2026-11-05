@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: unity-il2cpp
+description: "Unity IL2CPP"
+tags: [vra, triage]
+context:
+  scaffold_script: fixture.sh
