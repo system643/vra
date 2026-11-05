@@ -1,0 +1,19 @@
+{
+  "name": "vra",
+  "version": "0.1.0",
+  "description": "VRA — VR-ify Anything : transformer un jeu plat en expérience VR, avec banc d'essai sans casque.",
+  "author": { "name": "Quentin Artigala" },
+  "license": "MIT",
+  "keywords": ["vr", "flat2vr", "uevr", "bepinex", "reframework", "godot", "mcp-server"],
+  "skills": "./skills",
+  "mcpServers": "./.codex-plugin/mcp.json",
+  "interface": {
+    "displayName": "VRA",
+    "shortDescription": "Mettre n'importe quel jeu en VR",
+    "longDescription": "Triage avec preuves, plan au niveau maximum, installation réversible et banc d'essai VR sans casque.",
+    "developerName": "Quentin Artigala",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": ["Je veux jouer à ce jeu en VR.", "Ce PC est-il prêt pour le VRA Lab ?", "Ce jeu peut-il passer en VR avant que je l'achète ?"]
+  }
+}

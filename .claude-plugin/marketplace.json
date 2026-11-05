@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "vra",
+  "description": "VRA — VR-ify Anything : transformer un jeu plat en expérience VR, avec banc d'essai sans casque.",
+  "owner": {
+    "name": "Quentin Artigala"
+  },
+  "plugins": [
+    {
+      "name": "vra",
+      "description": "Triage avec preuves, plan au niveau maximum, installation réversible (UEVR, BepInEx, REFramework, Godot…), VRA Lab sans casque.",
+      "source": "./",
+      "category": "gaming"
+    }
+  ]
+}

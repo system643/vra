@@ -1,0 +1,13 @@
+{
+  "name": "vra",
+  "version": "0.1.0",
+  "description": "VRA — VR-ify Anything : transformer un jeu plat en expérience VR (serveur MCP + méthode).",
+  "contextFileName": "AGENTS.md",
+  "mcpServers": {
+    "vra": {
+      "command": "node",
+      "args": ["${extensionPath}${/}server${/}dist${/}vra.mjs"],
+      "env": { "VRA_TOOL_FAMILIES": "all" }
+    }
+  }
+}

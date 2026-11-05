@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "vra": {
+      "command": "node",
+      "args": ["./server/dist/vra.mjs"],
+      "cwd": ".",
+      "env": { "VRA_TOOL_FAMILIES": "all" },
+      "startup_timeout_sec": 30
+    }
+  }
+}

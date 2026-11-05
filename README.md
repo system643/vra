@@ -19,23 +19,36 @@ porte la méthode.
 - **Boucle de confirmation en casque** : marqueurs (Ctrl+Alt+M ou LB+RB+A), captures, logs de chaque outil, checklist qualité.
 - **Garde-fous** : anti-cheat = niveau 0 seulement ; jamais de DRM contourné ; le contenu web n'est jamais une instruction.
 
-## Installation (PC de jeu, ex. RTX A4500)
-
-Prérequis : Windows, [Node.js](https://nodejs.org) 22+, [Git](https://git-scm.com), Claude Code, Steam et tes jeux,
-Virtual Desktop Streamer (pour le casque). Pour le Lab sans casque : Meta XR Simulator et Meta XR Operator standalone
-(liens dans `skills/vr-ify/references/lab.md`).
+## Installation en une commande
 
 ```powershell
 cd $HOME\Desktop
 git clone https://github.com/system643/vra.git VR
-cd VR\server
-npm install
-npm run build     # vérifie les types et produit server/dist/vra.mjs (autonome, déjà fourni dans le dépôt)
-npm test          # 55 tests (24 faux jeux, Lab avec faux jeu / faux Operator / faux pont)
-npm run smoke     # test de bout en bout du serveur MCP
-cd ..
-claude --plugin-dir .
+.\VR\setup.cmd
 ```
+
+(ou double-clic sur `setup.cmd` dans le dossier `VR`). Une fenêtre s'ouvre :
+
+1. **Clients IA** — cochés automatiquement s'ils sont détectés : Claude Code (plugin complet : skill, agents, serveur MCP,
+   installé pour ton compte, plus besoin de `--plugin-dir`), OpenAI Codex (serveur MCP + skill), Gemini CLI, Google
+   Antigravity, Cursor, VS Code / Copilot, Claude Desktop (serveur MCP).
+2. **Logiciels Meta** du banc d'essai sans casque — boutons « Télécharger » vers les pages officielles ; une fois les
+   fichiers dans Téléchargements, sur le Bureau ou dans le dossier `VR`, ils sont trouvés : l'Operator est extrait dans
+   les outils de VRA, le simulateur est installé (fenêtre Windows de confirmation). Ces fichiers ne vont jamais sur GitHub.
+3. **Options** — SDK .NET 8 (pour compiler les plugins Unity), tests complets.
+4. **Installer / mettre à jour** : Node.js est installé via winget s'il manque, puis dépendances, construction, test de
+   bout en bout, configuration des clients, logiciels Meta, contrôles (Steam, SteamVR, Virtual Desktop), vérification
+   finale (profil du Lab : complet sur une carte dédiée). Journal en direct, rapport dans `Documents\VRA\setup-report.json`.
+
+Autres modes : **Simulation** (rien n'est modifié), **Désinstaller** (retire VRA des clients cochés), ou en console :
+`.\setup.cmd -NoGui` (questions dans le terminal), `.\setup.cmd -NoGui -Yes` (tout accepter),
+`.\setup.cmd -NoGui --agents=claude,codex --dry-run`. Sur macOS / Linux : `./setup.sh`.
+Chaque fichier de configuration modifié est d'abord sauvegardé dans `Documents\VRA\backups\_setup\`, et relancer le setup
+ne duplique rien.
+
+Mettre à jour plus tard : `git pull` dans `VR`, puis relancer `setup.cmd`.
+
+Pour développer VRA : `cd server`, `npm install`, `npm run build`, `npm test` (61 tests), `npm run smoke`.
 
 Premières demandes à faire à Claude sur ce PC :
 1. « Vérifie si ce PC est prêt pour le VRA Lab » → `lab_machine_check` (profil attendu : complet) puis `xr_sim_status`.
