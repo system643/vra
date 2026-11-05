@@ -3263,8 +3263,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path23) {
-      let input2 = path23;
+    function removeDotSegments(path24) {
+      let input2 = path24;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3338,11 +3338,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path23) {
-      if (path23 === "" || path23[0] === "/") {
-        return removeDotSegments(path23);
+    function removeDotSegmentsRelative(path24) {
+      if (path24 === "" || path24[0] === "/") {
+        return removeDotSegments(path24);
       }
-      const segments = path23.split("/");
+      const segments = path24.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3705,8 +3705,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path23 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path23 && path23 !== "/" ? path23 : void 0;
+        const path24 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path24 && path24 !== "/" ? path24 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7243,12 +7243,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs25, exportName) {
+    function addFormats(ajv, list, fs26, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs25[f]);
+        ajv.addFormat(f, fs26[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7257,8 +7257,8 @@ var require_dist = __commonJS({
 });
 
 // src/index.ts
-import path22 from "node:path";
-import fs24 from "node:fs";
+import path23 from "node:path";
+import fs25 from "node:fs";
 
 // node_modules/zod/v3/helpers/util.js
 var util;
@@ -7634,8 +7634,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path23, errorMaps, issueData } = params;
-  const fullPath = [...path23, ...issueData.path || []];
+  const { data, path: path24, errorMaps, issueData } = params;
+  const fullPath = [...path24, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -7750,11 +7750,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path23, key) {
+  constructor(parent, value, path24, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path23;
+    this._path = path24;
     this._key = key;
   }
   get path() {
@@ -11709,10 +11709,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path23) {
-  if (!path23)
+function getElementAtPath(obj, path24) {
+  if (!path24)
     return obj;
-  return path23.reduce((acc, key) => acc?.[key], obj);
+  return path24.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12052,11 +12052,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path23, issues) {
+function prefixIssues(path24, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path23);
+    iss.path.unshift(path24);
     return iss;
   });
 }
@@ -12518,16 +12518,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path23 = []) => {
+  const processError = (error63, path24 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path23, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path24, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path23, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path24, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path23, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path24, ...issue2.path]);
       } else {
-        const fullpath = [...path23, ...issue2.path];
+        const fullpath = [...path24, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12566,17 +12566,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path23 = []) => {
+  const processError = (error63, path24 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path23, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path24, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path23, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path24, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path23, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path24, ...issue2.path]);
       } else {
-        const fullpath = [...path23, ...issue2.path];
+        const fullpath = [...path24, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -12615,8 +12615,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path23 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path23) {
+  const path24 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path24) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -26355,13 +26355,13 @@ function _promise(Class2, innerType) {
 }
 // @__NO_SIDE_EFFECTS__
 function _custom(Class2, fn, _params) {
-  const norm = normalizeParams(_params);
-  norm.abort ?? (norm.abort = true);
+  const norm2 = normalizeParams(_params);
+  norm2.abort ?? (norm2.abort = true);
   const schema = new Class2({
     type: "custom",
     check: "custom",
     fn,
-    ...norm
+    ...norm2
   });
   return schema;
 }
@@ -28167,11 +28167,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path23) {
-  if (path23.length === 0) {
+function getDotPath(path24) {
+  if (path24.length === 0) {
     return "object root";
   }
-  return path23.reduce((acc, seg, index) => {
+  return path24.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30398,13 +30398,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path23 = ref.slice(1).split("/").filter(Boolean);
-  if (path23.length === 0) {
+  const path24 = ref.slice(1).split("/").filter(Boolean);
+  if (path24.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path23[0] === defsKey) {
-    const key = path23[1] === void 0 ? void 0 : decodeJSONPointerSegment(path23[1]);
+  if (path24[0] === defsKey) {
+    const key = path24[1] === void 0 ? void 0 : decodeJSONPointerSegment(path24[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -38472,12 +38472,12 @@ function safeEntries(entries) {
   const files = [];
   const problems = [];
   for (const e of entries) {
-    const norm = e.replace(/\\/g, "/");
-    if (norm.startsWith("/") || /^[A-Za-z]:/.test(norm) || norm.split("/").includes("..")) {
+    const norm2 = e.replace(/\\/g, "/");
+    if (norm2.startsWith("/") || /^[A-Za-z]:/.test(norm2) || norm2.split("/").includes("..")) {
       problems.push(`entr\xE9e dangereuse refus\xE9e : ${e}`);
       continue;
     }
-    if (!norm.endsWith("/")) files.push(norm.replace(/^\.\//, ""));
+    if (!norm2.endsWith("/")) files.push(norm2.replace(/^\.\//, ""));
   }
   return { files, problems };
 }
@@ -39929,7 +39929,8 @@ var WORKFLOWS = [
       "lab_machine_check : profil complet (carte d\xE9di\xE9e) ou l\xE9ger (carte int\xE9gr\xE9e : jeux l\xE9gers, r\xE9solution r\xE9duite).",
       "xr_sim_status : Meta XR Simulator (obligatoire) et Meta XR Operator (pilotage t\xEAte/manettes) d\xE9tect\xE9s ; sinon guider l'installation.",
       "G\xE9n\xE9rer et d\xE9ployer le pont \xE0 chaud du moteur (scaffold_* avec deploy/confirm, ou plugin compil\xE9 via deploy_files).",
-      "lab_launch : jeu sur le casque simul\xE9, injection UEVR automatique pour Unreal, attente de la t\xE9l\xE9m\xE9trie.",
+      "lab_launch : jeu sur le casque simul\xE9, injection UEVR automatique pour Unreal, attente de la t\xE9l\xE9m\xE9trie, recette de menus rejou\xE9e.",
+      "Premi\xE8re fois : naviguer jusqu'au jeu avec game_ui_look / game_ui_click / game_ui_key, puis game_ui_recipe action=save.",
       "lab_operator_tools puis lab_operator_map (une fois) : brancher t\xEAte, manettes, boutons, capture.",
       "lab_run_scenario smoke, head_6dof, world_scale, controllers, hud : chaque \xE9chec = une piste pr\xE9cise.",
       "lab_matrix sur les r\xE9glages en jeu (mode de rendu, \xE9chelle, vis\xE9e, distance du HUD, cvars) : classement, plantages d\xE9tect\xE9s et contourn\xE9s.",
@@ -43199,8 +43200,8 @@ function saveImageContent(content, outBase) {
 }
 
 // src/lab/scenario.ts
-import fs23 from "node:fs";
-import path21 from "node:path";
+import fs24 from "node:fs";
+import path22 from "node:path";
 
 // src/util/png.ts
 import fs22 from "node:fs";
@@ -43370,9 +43371,181 @@ function compareFrames(before, after, expect) {
   return { before, after, changed, meanDifference: r1(s.mad0), viewShift: { dx: s.dx, dy: s.dy }, interpretation, ...expect ? { expectation: expect, expectationMet } : {} };
 }
 
+// src/lab/input.ts
+import fs23 from "node:fs";
+import path21 from "node:path";
+import { spawn as spawn3, execFileSync } from "node:child_process";
+import { createInterface } from "node:readline";
+var InputWorker = class {
+  proc = null;
+  seq = 0;
+  pending = /* @__PURE__ */ new Map();
+  start() {
+    const script = path21.join(pluginRoot(), "marker", "vra-input-worker.ps1");
+    if (!fs23.existsSync(script)) throw new Error(`Script de contr\xF4le introuvable : ${script}`);
+    const p = spawn3("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script], { windowsHide: true });
+    this.proc = p;
+    createInterface({ input: p.stdout }).on("line", (line) => {
+      let msg;
+      try {
+        msg = JSON.parse(line);
+      } catch {
+        return;
+      }
+      const w = this.pending.get(msg.id);
+      if (!w) return;
+      clearTimeout(w.timer);
+      this.pending.delete(msg.id);
+      if (msg.ok) w.resolve(msg.result);
+      else w.reject(new Error(msg.error ?? "erreur du contr\xF4leur"));
+    });
+    p.on("exit", () => {
+      for (const w of this.pending.values()) {
+        clearTimeout(w.timer);
+        w.reject(new Error("le contr\xF4leur d'interface s'est arr\xEAt\xE9"));
+      }
+      this.pending.clear();
+      this.proc = null;
+    });
+  }
+  call(op, args = {}, timeoutMs = 3e4) {
+    if (process.platform !== "win32") return Promise.reject(new Error("Contr\xF4le de l'interface des jeux : Windows uniquement."));
+    if (!this.proc) this.start();
+    const id = ++this.seq;
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`d\xE9lai d\xE9pass\xE9 pour \xAB ${op} \xBB`));
+      }, timeoutMs);
+      this.pending.set(id, { resolve, reject, timer });
+      this.proc.stdin.write(JSON.stringify({ id, op, ...args }) + "\n");
+    });
+  }
+  stop() {
+    this.proc?.kill();
+    this.proc = null;
+  }
+};
+var worker = new InputWorker();
+function pidByExe(exeName) {
+  if (process.platform !== "win32") return null;
+  try {
+    const out = execFileSync("tasklist", ["/FO", "CSV", "/NH", "/FI", `IMAGENAME eq ${exeName}`], { encoding: "utf8", windowsHide: true });
+    const m = /^"[^"]+","(\d+)"/m.exec(out);
+    return m ? Number(m[1]) : null;
+  } catch {
+    return null;
+  }
+}
+function norm(s) {
+  return s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+function matchText(lines, query) {
+  const q = norm(query);
+  if (!q) return null;
+  let best = null;
+  const consider = (text, box, score) => {
+    if (!best || score > best.score) best = { text, x: box.x, y: box.y, w: box.w, h: box.h, score };
+  };
+  for (const l of lines) {
+    const ln = norm(l.text);
+    if (ln === q) consider(l.text, l, 1);
+    for (let i = 0; i < l.words.length; i++) {
+      for (let j = i; j < l.words.length && j < i + 6; j++) {
+        const seg = l.words.slice(i, j + 1);
+        const t = norm(seg.map((w) => w.text).join(" "));
+        if (t === q) {
+          const x0 = Math.min(...seg.map((w) => w.x)), y0 = Math.min(...seg.map((w) => w.y));
+          const x1 = Math.max(...seg.map((w) => w.x + w.w)), y1 = Math.max(...seg.map((w) => w.y + w.h));
+          consider(seg.map((w) => w.text).join(" "), { text: t, x: x0, y: y0, w: x1 - x0, h: y1 - y0 }, 0.95);
+        }
+      }
+    }
+    if (ln.includes(q)) consider(l.text, l, 0.7 - Math.min(0.3, (ln.length - q.length) / 100));
+  }
+  return best;
+}
+function capDir(gamePath2) {
+  return ensureDir(path21.join(profileDir(gamePath2), "lab", "ui"));
+}
+async function uiCapture(t, focus = true) {
+  const out = path21.join(capDir(t.gamePath), `ui_${timestamp()}.png`);
+  return worker.call("capture", { pid: t.pid, out, focus });
+}
+async function uiOcr(file3) {
+  const r = await worker.call("ocr", { file: file3 }, 6e4);
+  const lines = Array.isArray(r.lines) ? r.lines : r.lines ? [r.lines] : [];
+  return { language: r.language, lines: lines.map((l) => ({ ...l, words: Array.isArray(l.words) ? l.words : l.words ? [l.words] : [] })) };
+}
+async function uiFindText(t, query) {
+  const cap = await uiCapture(t);
+  const ocr = await uiOcr(cap.file);
+  const m = matchText(ocr.lines, query);
+  return { capture: cap.file, match: m, visibleText: ocr.lines.map((l) => l.text).slice(0, 40) };
+}
+async function uiClick(t, x, y, opts = {}) {
+  await worker.call("focus", { pid: t.pid });
+  return worker.call("click", { pid: t.pid, x: Math.round(x), y: Math.round(y), button: opts.button ?? "left", count: opts.count ?? 1 });
+}
+async function uiClickText(t, query) {
+  const f = await uiFindText(t, query);
+  if (!f.match) throw new Error(`texte \xAB ${query} \xBB introuvable \xE0 l'\xE9cran. Texte visible : ${f.visibleText.join(" | ").slice(0, 400)}`);
+  const cx = f.match.x + f.match.w / 2, cy = f.match.y + f.match.h / 2;
+  await uiClick(t, cx, cy);
+  return { clicked: f.match.text, x: Math.round(cx), y: Math.round(cy), capture: f.capture };
+}
+async function uiKey(t, keys, opts = {}) {
+  await worker.call("focus", { pid: t.pid });
+  return worker.call("key", { pid: t.pid, keys, repeat: opts.repeat ?? 1, hold_ms: opts.hold_ms ?? 60 });
+}
+async function uiType(t, text) {
+  await worker.call("focus", { pid: t.pid });
+  return worker.call("type", { pid: t.pid, text });
+}
+async function uiWaitText(t, query, timeoutMs = 6e4, intervalMs = 1500) {
+  const t0 = Date.now();
+  let last = [];
+  while (Date.now() - t0 < timeoutMs) {
+    const f = await uiFindText(t, query);
+    if (f.match) return { found: f.match.text, after_ms: Date.now() - t0, capture: f.capture };
+    last = f.visibleText;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  throw new Error(`\xAB ${query} \xBB n'est pas apparu en ${Math.round(timeoutMs / 1e3)} s. Dernier texte visible : ${last.join(" | ").slice(0, 300)}`);
+}
+function recipeFile(gamePath2) {
+  return path21.join(ensureDir(path21.join(profileDir(gamePath2), "lab")), "menu_recipe.json");
+}
+function readRecipe(gamePath2) {
+  return readJson(recipeFile(gamePath2), null);
+}
+function saveRecipe(gamePath2, name, steps) {
+  writeJson(recipeFile(gamePath2), { name, steps, savedAt: (/* @__PURE__ */ new Date()).toISOString() });
+}
+async function runUiSteps(t, steps) {
+  const out = [];
+  for (const s of steps) {
+    const t0 = Date.now();
+    try {
+      let detail;
+      if (s.do === "wait_text") detail = await uiWaitText(t, s.text, (s.timeout_s ?? 60) * 1e3);
+      else if (s.do === "click_text") detail = await uiClickText(t, s.text);
+      else if (s.do === "click") detail = await uiClick(t, s.x, s.y);
+      else if (s.do === "key") detail = await uiKey(t, s.keys, { repeat: s.repeat, hold_ms: s.hold_ms });
+      else if (s.do === "type") detail = await uiType(t, s.text);
+      else if (s.do === "wait") await new Promise((r) => setTimeout(r, Math.min(s.ms, 12e4)));
+      out.push({ step: s, ok: true, detail, ms: Date.now() - t0 });
+    } catch (e) {
+      out.push({ step: s, ok: false, error: e.message, ms: Date.now() - t0 });
+      break;
+    }
+  }
+  return out;
+}
+
 // src/lab/scenario.ts
 function sessionFile() {
-  return path21.join(ensureDir(path21.join(vraHome(), "lab")), "current.json");
+  return path22.join(ensureDir(path22.join(vraHome(), "lab")), "current.json");
 }
 function readLabSession() {
   return readJson(sessionFile(), null);
@@ -43407,7 +43580,7 @@ async function callMapped(kind, vars) {
 async function runScenario(name, steps, session, opts = {}) {
   const t0 = Date.now();
   const report = { name, ok: true, passed: 0, failed: 0, durationMs: 0, steps: [], captures: {}, states: {}, checks: [] };
-  const capDir = ensureDir(path21.join(profileDir(session.gamePath), "lab", "captures", `${timestamp()}_${name.replace(/[^\w-]+/g, "_")}`));
+  const capDir2 = ensureDir(path22.join(profileDir(session.gamePath), "lab", "captures", `${timestamp()}_${name.replace(/[^\w-]+/g, "_")}`));
   for (let i = 0; i < steps.length; i++) {
     const st = steps[i];
     const s0 = Date.now();
@@ -43447,15 +43620,15 @@ async function runScenario(name, steps, session, opts = {}) {
           if (map2.capture) {
             try {
               const res = await callMapped("capture", {});
-              file3 = saveImageContent(res.content, path21.join(capDir, st.label));
+              file3 = saveImageContent(res.content, path22.join(capDir2, st.label));
             } catch {
               file3 = null;
             }
           }
           if (!file3) {
             const tmp = await captureScreen(session.gamePath, session.windowTitle);
-            file3 = path21.join(capDir, `${st.label}.png`);
-            fs23.renameSync(tmp, file3);
+            file3 = path22.join(capDir2, `${st.label}.png`);
+            fs24.renameSync(tmp, file3);
           }
           report.captures[st.label] = file3;
           r.detail = file3;
@@ -43514,6 +43687,13 @@ async function runScenario(name, steps, session, opts = {}) {
           report.checks.push({ check: `delta ${st.path} ${st.a}\u2192${st.b}`, ok, detail });
           r.detail = detail;
           if (!ok) throw new Error(detail);
+          break;
+        }
+        case "ui": {
+          if (!session.pid) throw new Error("pid du jeu inconnu");
+          const res = await runUiSteps({ pid: session.pid, gamePath: session.gamePath }, [st.step]);
+          r.detail = res[0]?.detail;
+          if (!res[0]?.ok) throw new Error(res[0]?.error ?? "action d'interface \xE9chou\xE9e");
           break;
         }
         case "alive": {
@@ -43688,12 +43868,21 @@ async function runMatrix(session, variants, scenario, opts) {
     rows.push(row);
   }
   const ranked = [...rows].sort((a, b) => b.score - a.score || (b.fps ?? 0) - (a.fps ?? 0));
-  const reportFile = path21.join(ensureDir(path21.join(profileDir(session.gamePath), "lab")), `matrice_${timestamp()}.json`);
+  const reportFile = path22.join(ensureDir(path22.join(profileDir(session.gamePath), "lab")), `matrice_${timestamp()}.json`);
   writeJson(reportFile, { rows: ranked });
   return { rows: ranked, best: ranked[0] && !ranked[0].crashed ? ranked[0] : null, reportFile };
 }
 
 // src/index.ts
+import { execFile as execFile5, execFileSync as execFileSync2 } from "node:child_process";
+function findOnPath(cmd) {
+  try {
+    const out = execFileSync2(process.platform === "win32" ? "where" : "which", [cmd], { encoding: "utf8", windowsHide: true });
+    return out.split(/\r?\n/)[0]?.trim() || null;
+  } catch {
+    return null;
+  }
+}
 var VERSION = "0.1.0";
 var ALL_FAMILIES = ["core", "web", "unreal", "unity", "reengine", "godot", "inspect", "lab"];
 function enabledFamiliesFromEnv() {
@@ -43783,7 +43972,7 @@ tool("core", "triage_game", { short: "Triage complet d'un jeu : moteur, version,
   const t = await runTriage(game_path);
   await recordFingerprint(game_path, t.fingerprint);
   const note = autoEnableFor(t.engine.family.value);
-  return { ...summarizeTriage(t), outils_actives: note, fiche: path22.join(vraHome(), "profiles", gameSlug(game_path), "fiche.md") };
+  return { ...summarizeTriage(t), outils_actives: note, fiche: path23.join(vraHome(), "profiles", gameSlug(game_path), "fiche.md") };
 });
 tool("core", "detect_engine", { short: "D\xE9tecte moteur, version, variante (Mono/IL2CPP, Win64/WinGDK), identit\xE9 du jeu, ex\xE9cutable principal, lanceur. Combine signatures VRA et r\xE8gles SteamDB (indices d\xE9duits)." }, { game_path: gamePath }, async ({ game_path }) => {
   const d = await detectEngine(game_path);
@@ -43879,7 +44068,7 @@ tool("core", "session_open", { short: "Ouvre ou reprend la session d'un jeu : r\
   const st = readState(game_path);
   const chk = checklistStatus(game_path, fp.sha256);
   return {
-    profil: path22.join(vraHome(), "profiles", gameSlug(game_path)),
+    profil: path23.join(vraHome(), "profiles", gameSlug(game_path)),
     premiere_session: journal.filter((e) => e.kind === "open").length <= 1,
     mise_a_jour_detectee: changed,
     action_prioritaire: changed ? "Lancer le parcours game_updated_mod_broken avant toute autre chose." : null,
@@ -44052,7 +44241,7 @@ tool(
   async ({ game_path, exe, args, wait_seconds, capture, window_title, launch }) => {
     const started = (/* @__PURE__ */ new Date()).toISOString();
     const launched = launch ? launchGame(game_path, { exe, args }) : null;
-    if (launched) logEntry(game_path, { kind: "test", summary: `Lancement ${path22.basename(launched.exe)}`, details: { args } });
+    if (launched) logEntry(game_path, { kind: "test", summary: `Lancement ${path23.basename(launched.exe)}`, details: { args } });
     if (wait_seconds) await new Promise((r) => setTimeout(r, wait_seconds * 1e3));
     let shot = null;
     let captureError = null;
@@ -44070,18 +44259,18 @@ tool("core", "capture_screen", { short: "Capture l'\xE9cran ou une fen\xEAtre (m
 tool("core", "start_marker", { short: "D\xE9marre le programme de marqueurs pendant que l'utilisateur joue : Ctrl+Alt+M ou LB+RB+A (manette XInput) \u2192 horodatage, capture, fin des logs. Arr\xEAt automatique \xE0 la fermeture du jeu." }, { game_path: gamePath, process_name: external_exports.string().optional().describe("Nom du processus du jeu sans .exe, pour l'arr\xEAt automatique"), max_minutes: external_exports.number().int().min(5).max(720).optional() }, ({ game_path, process_name, max_minutes }) => {
   const scan = scanGame(game_path);
   const exe = pickMainExe(scan).exe;
-  const res = startMarker(game_path, { processName: process_name ?? (exe ? path22.basename(exe, ".exe") : void 0), maxMinutes: max_minutes });
+  const res = startMarker(game_path, { processName: process_name ?? (exe ? path23.basename(exe, ".exe") : void 0), maxMinutes: max_minutes });
   logEntry(game_path, { kind: "marker", summary: "Programme de marqueurs d\xE9marr\xE9", details: { pid: res.pid } });
   return res;
 });
 tool("core", "mark_marker_analyzed", { short: "Marque un marqueur VRA comme analys\xE9, avec la conclusion." }, { game_path: gamePath, marker_file: external_exports.string(), conclusion: external_exports.string() }, ({ game_path, marker_file, conclusion }) => {
-  const dir = path22.join(vraHome(), "profiles", gameSlug(game_path), "markers");
-  const file3 = path22.resolve(marker_file);
-  if (!file3.startsWith(path22.resolve(dir))) throw new Error("Le marqueur doit \xEAtre dans le dossier markers du profil.");
-  const m = JSON.parse(fs24.readFileSync(file3, "utf8"));
+  const dir = path23.join(vraHome(), "profiles", gameSlug(game_path), "markers");
+  const file3 = path23.resolve(marker_file);
+  if (!file3.startsWith(path23.resolve(dir))) throw new Error("Le marqueur doit \xEAtre dans le dossier markers du profil.");
+  const m = JSON.parse(fs25.readFileSync(file3, "utf8"));
   m.analyzed = true;
   m.conclusion = conclusion;
-  fs24.writeFileSync(file3, JSON.stringify(m, null, 2), "utf8");
+  fs25.writeFileSync(file3, JSON.stringify(m, null, 2), "utf8");
   logEntry(game_path, { kind: "result", summary: `Marqueur analys\xE9 : ${conclusion}`, evidence: [file3] });
   return { ok: true };
 });
@@ -44095,7 +44284,7 @@ tool(
     await assertNoAntiCheat(game_path);
     const scan = scanGame(game_path);
     const exe = pickMainExe(scan).exe;
-    const exeDir = exe ? path22.dirname(abs(scan, exe)) : scan.root;
+    const exeDir = exe ? path23.dirname(abs(scan, exe)) : scan.root;
     const det = await detectEngine(game_path);
     const runtime = det.family.value === "unity_il2cpp" ? "il2cpp" : det.family.value === "unity_mono" ? "mono" : null;
     const plan = await makePlan({ toolId: tool_id, gamePath: game_path, exeDir, version: version2, assetName: asset_name, localArchive: local_archive, hints: { runtime, identity: det.gameIdentity.value, backend } });
@@ -44128,7 +44317,7 @@ tool("unreal", "scaffold_uevr_profile", { short: "G\xE9n\xE8re un script Lua UEV
   const scan = scanGame(game_path);
   const exe = pickMainExe(scan).exe;
   if (!exe) throw new Error("Ex\xE9cutable introuvable.");
-  const r = await scaffoldUevr({ gamePath: game_path, exeStem: path22.basename(exe, ".exe"), classes, comfort: readComfort(game_path).effective, deploy: deploy2, confirm });
+  const r = await scaffoldUevr({ gamePath: game_path, exeStem: path23.basename(exe, ".exe"), classes, comfort: readComfort(game_path).effective, deploy: deploy2, confirm });
   if (r.deployed) logEntry(game_path, { kind: "install", summary: "Script UEVR d\xE9ploy\xE9", details: { target: r.deployTarget, backupId: r.backupId } });
   return r;
 });
@@ -44137,14 +44326,14 @@ tool("unity", "scaffold_unity_plugin", { short: "G\xE9n\xE8re un projet de plugi
   const runtime = d.family.value === "unity_il2cpp" ? "il2cpp" : "mono";
   const scan = scanGame(game_path);
   const exe = pickMainExe(scan).exe;
-  const exeDir = exe ? path22.dirname(abs(scan, exe)) : scan.root;
+  const exeDir = exe ? path23.dirname(abs(scan, exe)) : scan.root;
   return scaffoldUnity({ gamePath: game_path, exeDir, runtime, classes, comfort: readComfort(game_path).effective });
 });
 tool("reengine", "scaffold_reframework_script", { short: "G\xE9n\xE8re un script Lua REFramework (menu VRA, v\xE9rification des types, gabarit de hook). D\xE9ploiement dans reframework/autorun avec deploy=true ET confirm=true." }, { game_path: gamePath, types: external_exports.array(external_exports.string()).default([]), deploy: external_exports.boolean().default(false), confirm: external_exports.boolean().default(false) }, async ({ game_path, types, deploy: deploy2, confirm }) => {
   if (deploy2) await assertNoAntiCheat(game_path);
   const scan = scanGame(game_path);
   const exe = pickMainExe(scan).exe;
-  const exeDir = exe ? path22.dirname(abs(scan, exe)) : scan.root;
+  const exeDir = exe ? path23.dirname(abs(scan, exe)) : scan.root;
   return scaffoldReframework({ gamePath: game_path, exeDir, types, deploy: deploy2, confirm });
 });
 tool("godot", "scaffold_godot_xr", { short: "Ajoute OpenXR et un rig XR (XROrigin3D, XRCamera3D, deux XRController3D) \xE0 un projet Godot 4 R\xC9CUP\xC9R\xC9 dans un dossier VRA (jamais le jeu). Sauvegarde project.godot." }, { game_path: gamePath, project_path: external_exports.string().describe("Dossier du projet r\xE9cup\xE9r\xE9 (GDRE Tools), hors du dossier du jeu") }, async ({ game_path, project_path }) => {
@@ -44162,7 +44351,7 @@ tool("inspect", "live_inspect", { short: "DERNIER RECOURS : instrumentation Frid
   const scan = scanGame(game_path);
   const rel = exe ?? pickMainExe(scan).exe;
   if (!rel) throw new Error("Ex\xE9cutable introuvable.");
-  const r = await liveInspect({ exe: path22.isAbsolute(rel) ? rel : abs(scan, rel), scriptPath: script_path, durationSeconds: duration_seconds });
+  const r = await liveInspect({ exe: path23.isAbsolute(rel) ? rel : abs(scan, rel), scriptPath: script_path, durationSeconds: duration_seconds });
   logEntry(game_path, { kind: "test", summary: `Inspection Frida (${r.messages.length} messages)`, details: { script: r.script, sha256: r.scriptSha256, cleanup: r.cleanup, errors: r.errors } });
   return r;
 });
@@ -44176,7 +44365,7 @@ tool("core", "export_case_study", { short: "G\xE9n\xE8re l'\xE9tude de cas du je
 tool("core", "export_share_package", { short: "Pr\xE9pare un paquet partageable (profil UEVR, plugins VRA, scripts REFramework) sans aucun fichier du jeu, avec cr\xE9dits et rappels de licences." }, { game_path: gamePath, include: external_exports.array(external_exports.enum(["uevr_profile", "bepinex_plugins", "reframework_scripts"])).min(1) }, ({ game_path, include }) => {
   const scan = scanGame(game_path);
   const exe = pickMainExe(scan).exe;
-  return exportSharePackage(game_path, { exeStem: exe ? path22.basename(exe, ".exe") : void 0, exeDir: exe ? path22.dirname(abs(scan, exe)) : scan.root, include });
+  return exportSharePackage(game_path, { exeStem: exe ? path23.basename(exe, ".exe") : void 0, exeDir: exe ? path23.dirname(abs(scan, exe)) : scan.root, include });
 });
 tool("core", "lab_machine_check", { short: "V\xE9rifie le mat\xE9riel (carte graphique, VRAM, encodeur, RAM, disque) et donne le profil du Lab : complet (carte d\xE9di\xE9e \u2265 8 Go) ou l\xE9ger (carte int\xE9gr\xE9e : jeux l\xE9gers, r\xE9solution r\xE9duite, performances non mesurables)." }, {}, () => machineCheck());
 tool("lab", "xr_sim_status", { short: "\xC9tat du banc d'essai sans casque : Meta XR Simulator (runtime OpenXR), Meta XR Operator (pilote pour l'agent), injecteur UEVR, runtime OpenXR actif (lecture seule), pages de t\xE9l\xE9chargement officielles." }, { simulator_json: external_exports.string().optional(), operator_dir: external_exports.string().optional() }, async ({ simulator_json, operator_dir }) => {
@@ -44201,8 +44390,8 @@ tool(
   "lab",
   "lab_launch",
   { short: "Lance le jeu sur le casque simul\xE9 (XR_RUNTIME_JSON par processus), avec la couche Meta XR Operator pour piloter t\xEAte/manettes et capturer, et injecte UEVR automatiquement (--attach) pour Unreal. Pr\xE9pare le pont \xE0 chaud (VRA_LAB_DIR) et attend sa premi\xE8re t\xE9l\xE9m\xE9trie." },
-  { game_path: gamePath, exe: external_exports.string().optional(), args: external_exports.array(external_exports.string()).optional(), simulator_json: external_exports.string().optional(), operator_dir: external_exports.string().optional(), inject_uevr: external_exports.boolean().optional(), injector_path: external_exports.string().optional(), window_title: external_exports.string().optional().describe("Titre de la fen\xEAtre du simulateur pour les captures de secours"), wait_bridge_seconds: external_exports.number().int().min(0).max(300).default(60) },
-  async ({ game_path, exe, args, simulator_json, operator_dir, inject_uevr, injector_path, window_title, wait_bridge_seconds }) => {
+  { game_path: gamePath, exe: external_exports.string().optional(), args: external_exports.array(external_exports.string()).optional(), simulator_json: external_exports.string().optional(), operator_dir: external_exports.string().optional(), inject_uevr: external_exports.boolean().optional(), injector_path: external_exports.string().optional(), window_title: external_exports.string().optional().describe("Titre de la fen\xEAtre du simulateur pour les captures de secours"), wait_bridge_seconds: external_exports.number().int().min(0).max(300).default(60), run_menu_recipe: external_exports.boolean().default(true).describe("Rejouer la recette de menus enregistr\xE9e (lancement \u2192 en jeu)") },
+  async ({ game_path, exe, args, simulator_json, operator_dir, inject_uevr, injector_path, window_title, wait_bridge_seconds, run_menu_recipe }) => {
     await assertNoAntiCheat(game_path);
     const sim = await findSimulatorRuntime(simulator_json);
     if (!sim.json) throw new Error(`Meta XR Simulator introuvable. Installer : ${DOWNLOADS.simulator} (ou passer simulator_json).`);
@@ -44210,20 +44399,20 @@ tool(
     const det = await detectEngine(game_path);
     const family = det.family.value;
     const dir = bridgeDir(game_path, family);
-    fs24.mkdirSync(dir, { recursive: true });
+    fs25.mkdirSync(dir, { recursive: true });
     await resetOperator();
     const inject = inject_uevr ?? family === "unreal";
     const t0 = Date.now();
     const r = labLaunch(game_path, { runtimeJson: sim.json, operatorLayerDir: op.layerDir, labDir: dir, exe, args, injectUevr: inject, injectorPath: injector_path ?? null });
-    const session = { gamePath: path22.resolve(game_path), family, bridgeDir: dir, pid: r.game.pid, exe: r.game.exe, launch: { exe, args, simulator_json: sim.json, operator_dir: op.layerDir, inject_uevr: inject, injector_path }, startedAt: (/* @__PURE__ */ new Date()).toISOString(), windowTitle: window_title };
+    const session = { gamePath: path23.resolve(game_path), family, bridgeDir: dir, pid: r.game.pid, exe: r.game.exe, launch: { exe, args, simulator_json: sim.json, operator_dir: op.layerDir, inject_uevr: inject, injector_path }, startedAt: (/* @__PURE__ */ new Date()).toISOString(), windowTitle: window_title };
     writeLabSession(session);
     logEntry(game_path, { kind: "test", summary: "Lancement Lab (casque simul\xE9)", details: { env: r.env, injector: r.injector } });
     let bridge = "non attendu";
     if (wait_bridge_seconds > 0 && bridgeFamilyKey(family)) {
       bridge = "pas de r\xE9ponse (pont \xE0 chaud non charg\xE9 ? script/plugin VRA d\xE9ploy\xE9 ?)";
-      const stateFile = path22.join(dir, "vra_state.json");
+      const stateFile = path23.join(dir, "vra_state.json");
       while (Date.now() - t0 < wait_bridge_seconds * 1e3) {
-        if (fs24.existsSync(stateFile) && fs24.statSync(stateFile).mtimeMs >= t0) {
+        if (fs25.existsSync(stateFile) && fs25.statSync(stateFile).mtimeMs >= t0) {
           bridge = { pret: true, apres_ms: Date.now() - t0, etat: readState2(dir) };
           break;
         }
@@ -44234,7 +44423,13 @@ tool(
         await new Promise((res) => setTimeout(res, 1e3));
       }
     }
-    return { ...r, session, pont_a_chaud: bridge, pilotage_agent: op.layerDir ? "Meta XR Operator charg\xE9 : lab_operator_tools pour lister ses outils" : "Operator absent : pas de pilotage t\xEAte/manettes, captures d'\xE9cran de secours seulement" };
+    let menus = "aucune recette enregistr\xE9e (naviguer avec game_ui_* puis game_ui_recipe action=save)";
+    const recipe = readRecipe(game_path);
+    if (run_menu_recipe && recipe && r.game.pid) {
+      const res = await runUiSteps({ pid: r.game.pid, gamePath: game_path }, recipe.steps).catch((e) => [{ ok: false, error: e.message }]);
+      menus = { recette: recipe.name, ok: res.every((x) => x.ok), resultats: res };
+    }
+    return { ...r, session, pont_a_chaud: bridge, menus, pilotage_agent: op.layerDir ? "Meta XR Operator charg\xE9 : lab_operator_tools pour lister ses outils" : "Operator absent : pas de pilotage t\xEAte/manettes, captures d'\xE9cran de secours seulement" };
   }
 );
 tool("lab", "steamvr_null_driver", { short: "Repli pour les outils OpenVR seulement : casque fictif SteamVR (pilote null). plan \u2192 enable (confirm=true, sauvegarde) \u2192 disable (restauration). Tant qu'actif, SteamVR ignore le vrai casque." }, { action: external_exports.enum(["plan", "enable", "disable"]), game_path: gamePath, confirm: external_exports.boolean().default(false) }, async ({ action, game_path, confirm }) => {
@@ -44259,7 +44454,7 @@ tool("lab", "lab_operator_call", { short: "Appelle directement un outil de Meta 
   const op = await operator();
   const res = await op.callTool(name, args);
   const s = readLabSession();
-  const img = s ? saveImageContent(res.content, path22.join(profileDir(s.gamePath), "lab", "captures", `operator_${Date.now()}`)) : null;
+  const img = s ? saveImageContent(res.content, path23.join(profileDir(s.gamePath), "lab", "captures", `operator_${Date.now()}`)) : null;
   return { erreur: res.isError ?? false, texte: res.content.filter((c) => c.type === "text").map((c) => c.text).join("\n").slice(0, 4e3), image: img };
 });
 tool("lab", "lab_command", { short: "Envoie des commandes au pont \xE0 chaud du mod (UEVR, plugin Unity, REFramework, Godot) et attend l'accus\xE9 : r\xE9glages appliqu\xE9s en quelques secondes, sans relancer le jeu. Sans argument : liste des op\xE9rations du moteur." }, { commands: external_exports.array(external_exports.object({ op: external_exports.string(), args: external_exports.record(external_exports.string(), external_exports.any()).optional() })).optional(), timeout_ms: external_exports.number().int().min(200).max(6e4).default(5e3) }, async ({ commands, timeout_ms }) => {
@@ -44294,7 +44489,8 @@ var stepSchema = external_exports.union([
   external_exports.object({ op: external_exports.literal("state"), label: external_exports.string() }),
   external_exports.object({ op: external_exports.literal("assert_state"), label: external_exports.string(), path: external_exports.string(), cmp: external_exports.enum([">", "<", "==", "~"]), value: external_exports.union([external_exports.number(), external_exports.string(), external_exports.boolean()]), tol: external_exports.number().optional() }),
   external_exports.object({ op: external_exports.literal("assert_delta"), a: external_exports.string(), b: external_exports.string(), path: external_exports.string(), min: external_exports.number().optional(), max: external_exports.number().optional(), expect_ratio: external_exports.object({ per: external_exports.number(), unitsPath: external_exports.string().optional(), tol: external_exports.number() }).optional() }),
-  external_exports.object({ op: external_exports.literal("alive") })
+  external_exports.object({ op: external_exports.literal("alive") }),
+  external_exports.object({ op: external_exports.literal("ui"), step: external_exports.any().describe("{do:'click_text',text} | {do:'click',x,y} | {do:'key',keys} | {do:'type',text} | {do:'wait_text',text,timeout_s} | {do:'wait',ms}"), label: external_exports.string().optional() })
 ]);
 async function closeFromReport(s, closes, rep) {
   const closed = [];
@@ -44357,7 +44553,11 @@ tool(
       const t02 = Date.now();
       while (Date.now() - t02 < 9e4) {
         const ping = await sendCommands(s.bridgeDir, [{ op: "ping" }], 3e3);
-        if (!ping.timedOut) return next;
+        if (!ping.timedOut) {
+          const recipe = readRecipe(s.gamePath);
+          if (recipe && next.pid) await runUiSteps({ pid: next.pid, gamePath: s.gamePath }, recipe.steps).catch(() => void 0);
+          return next;
+        }
       }
       return null;
     } : void 0;
@@ -44374,6 +44574,132 @@ tool(
 );
 tool("lab", "analyze_vr_frame", { short: "Analyse automatique d'une capture VR (PNG) : \u0153il noir, rendu mono (yeux identiques), d\xE9calage st\xE9r\xE9o, d\xE9salignement vertical, image noire. R\xE9sultats \xAB d\xE9duits \xBB \xE0 compl\xE9ter par l'examen visuel (Read)." }, { file: external_exports.string(), layout: external_exports.enum(["auto", "side_by_side", "single"]).default("auto") }, ({ file: file3, layout }) => analyzeFrame(file3, layout));
 tool("lab", "compare_vr_frames", { short: "Compare deux captures (ex. avant/apr\xE8s un mouvement de t\xEAte simul\xE9) : image fig\xE9e ou non, glissement de la vue et conformit\xE9 au sens attendu (left/right/up/down/change/same)." }, { before: external_exports.string(), after: external_exports.string(), expect: external_exports.enum(["left", "right", "up", "down", "change", "same"]).optional() }, ({ before, after, expect }) => compareFrames(before, after, expect));
+async function uiTarget(game_path) {
+  await assertNoAntiCheat(game_path);
+  const s = readLabSession();
+  if (s && path23.resolve(s.gamePath) === path23.resolve(game_path) && s.pid && processAlive(s.pid)) return { pid: s.pid, gamePath: game_path };
+  const scan = scanGame(game_path);
+  const exe = pickMainExe(scan).exe;
+  const pid = exe ? pidByExe(path23.basename(exe)) : null;
+  if (!pid) throw new Error("Le jeu ne tourne pas : le lancer d'abord (lab_launch ou launch_and_capture).");
+  return { pid, gamePath: game_path };
+}
+function draftFile(game_path) {
+  return path23.join(profileDir(game_path), "lab", "menu_recipe_draft.json");
+}
+function recordDraft(game_path, step) {
+  const f = draftFile(game_path);
+  const cur = fs25.existsSync(f) ? JSON.parse(fs25.readFileSync(f, "utf8")) : [];
+  cur.push(step);
+  fs25.mkdirSync(path23.dirname(f), { recursive: true });
+  fs25.writeFileSync(f, JSON.stringify(cur, null, 2), "utf8");
+}
+tool("lab", "game_ui_look", { short: "Regarde l'interface du jeu : capture de la fen\xEAtre (\xE0 examiner avec Read) + texte lu par l'OCR de Windows avec la position de chaque ligne (en pixels de la capture). Point de d\xE9part pour naviguer dans les menus." }, { game_path: gamePath }, async ({ game_path }) => {
+  const t = await uiTarget(game_path);
+  const cap = await uiCapture(t);
+  const ocr = await uiOcr(cap.file);
+  return { capture: cap.file, fenetre: { largeur: cap.w, hauteur: cap.h, premier_plan: cap.foreground }, langue_ocr: ocr.language, texte: ocr.lines.map((l) => ({ texte: l.text, x: l.x, y: l.y, w: l.w, h: l.h })).slice(0, 80) };
+});
+tool("lab", "game_ui_click", { short: "Clique dans le jeu : sur un texte visible (\xAB Nouvelle partie \xBB, \xAB Continuer \xBB\u2026) trouv\xE9 par OCR, ou \xE0 des coordonn\xE9es de la capture. Refus\xE9 si la fen\xEAtre du jeu n'est pas au premier plan ; s'arr\xEAte si l'utilisateur bouge la souris." }, { game_path: gamePath, text: external_exports.string().optional(), x: external_exports.number().optional(), y: external_exports.number().optional(), button: external_exports.enum(["left", "right"]).default("left"), count: external_exports.number().int().min(1).max(3).default(1), record: external_exports.boolean().default(true) }, async ({ game_path, text, x, y, button, count, record: record2 }) => {
+  const t = await uiTarget(game_path);
+  let r;
+  if (text) {
+    r = await uiClickText(t, text);
+    if (record2) recordDraft(game_path, { do: "click_text", text });
+  } else if (x !== void 0 && y !== void 0) {
+    r = await uiClick(t, x, y, { button, count });
+    if (record2) recordDraft(game_path, { do: "click", x, y });
+  } else throw new Error("text ou x/y requis");
+  return r;
+});
+tool("lab", "game_ui_key", { short: "Appuie sur des touches dans le jeu (\xAB enter \xBB, \xAB esc \xBB, \xAB space \xBB, \xAB down \xBB, \xAB ctrl+s \xBB, \xAB w \xBB maintenu avec hold_ms\u2026). Codes de balayage mat\xE9riels : compatibles avec la plupart des jeux." }, { game_path: gamePath, keys: external_exports.string(), repeat: external_exports.number().int().min(1).max(50).default(1), hold_ms: external_exports.number().int().min(30).max(1e4).default(60), record: external_exports.boolean().default(true) }, async ({ game_path, keys, repeat, hold_ms, record: record2 }) => {
+  const t = await uiTarget(game_path);
+  const r = await uiKey(t, keys, { repeat, hold_ms });
+  if (record2) recordDraft(game_path, { do: "key", keys, repeat, hold_ms });
+  return r;
+});
+tool("lab", "game_ui_type", { short: "Tape du texte dans le jeu (nom de sauvegarde, pseudo\u2026)." }, { game_path: gamePath, text: external_exports.string().max(200), record: external_exports.boolean().default(true) }, async ({ game_path, text, record: record2 }) => {
+  const t = await uiTarget(game_path);
+  const r = await uiType(t, text);
+  if (record2) recordDraft(game_path, { do: "type", text });
+  return r;
+});
+tool("lab", "game_ui_wait_text", { short: "Attend qu'un texte apparaisse \xE0 l'\xE9cran (fin d'un chargement, menu principal\u2026) avant de continuer." }, { game_path: gamePath, text: external_exports.string(), timeout_s: external_exports.number().int().min(1).max(600).default(60), record: external_exports.boolean().default(true) }, async ({ game_path, text, timeout_s, record: record2 }) => {
+  const t = await uiTarget(game_path);
+  const r = await uiWaitText(t, text, timeout_s * 1e3);
+  if (record2) recordDraft(game_path, { do: "wait_text", text, timeout_s });
+  return r;
+});
+tool("lab", "game_ui_recipe", { short: "Recette de menus \xAB lancement \u2192 en jeu \xBB : les actions game_ui_* sont enregistr\xE9es en brouillon ; save garde le brouillon comme recette, run la rejoue (lab_launch et les relances de lab_matrix la rejouent automatiquement)." }, { game_path: gamePath, action: external_exports.enum(["get", "save", "run", "clear_draft", "set"]), name: external_exports.string().optional(), steps: external_exports.array(external_exports.any()).optional() }, async ({ game_path, action, name, steps }) => {
+  if (action === "get") return { recette: readRecipe(game_path), brouillon: fs25.existsSync(draftFile(game_path)) ? JSON.parse(fs25.readFileSync(draftFile(game_path), "utf8")) : [] };
+  if (action === "clear_draft") {
+    fs25.rmSync(draftFile(game_path), { force: true });
+    return { ok: true };
+  }
+  if (action === "save" || action === "set") {
+    const list = action === "set" ? steps : fs25.existsSync(draftFile(game_path)) ? JSON.parse(fs25.readFileSync(draftFile(game_path), "utf8")) : [];
+    if (!list?.length) throw new Error("Rien \xE0 enregistrer : naviguer d'abord avec game_ui_* (ou passer steps avec action=set).");
+    saveRecipe(game_path, name ?? "lancement_vers_jeu", list);
+    fs25.rmSync(draftFile(game_path), { force: true });
+    logEntry(game_path, { kind: "setting", summary: `Recette de menus enregistr\xE9e (${list.length} \xE9tapes)` });
+    return { ok: true, etapes: list.length };
+  }
+  const rec = readRecipe(game_path);
+  if (!rec) throw new Error("Aucune recette enregistr\xE9e pour ce jeu.");
+  const t = await uiTarget(game_path);
+  const res = await runUiSteps(t, rec.steps);
+  return { recette: rec.name, resultats: res, ok: res.every((r) => r.ok) };
+});
+var DOTNET_EXPLANATION = "Pour fabriquer le mod VR (plugin Unity), il faut le SDK .NET 8 de Microsoft : sans lui, on ne peut pas transformer le code du mod en fichier utilisable par le jeu. Il vient de Microsoft, gratuitement, via le gestionnaire officiel de Windows (winget). Commande : winget install --id Microsoft.DotNet.SDK.8 --source winget";
+function dotnetSdks() {
+  try {
+    const out = execFileSync2("dotnet", ["--list-sdks"], { encoding: "utf8", windowsHide: true });
+    return out.split(/\r?\n/).map((l) => l.trim()).filter((l) => /^\d+\./.test(l));
+  } catch {
+    return [];
+  }
+}
+tool("core", "build_tools_status", { short: "V\xE9rifie les outils de compilation : SDK .NET (plugins Unity/BepInEx), winget. Donne l'explication \xE0 montrer \xE0 l'utilisateur s'il manque quelque chose." }, {}, () => {
+  const sdks = dotnetSdks();
+  return { dotnet_sdks: sdks, pret_unity: sdks.some((s) => /^(6|7|8|9|10)\./.test(s)), winget: !!findOnPath("winget"), explication_si_absent: sdks.length ? null : DOTNET_EXPLANATION };
+});
+tool("core", "install_dotnet_sdk", { short: "Installe le SDK .NET 8 de Microsoft via winget (source officielle). Sans confirm=true : renvoie l'explication et la commande \xE0 montrer \xE0 l'utilisateur." }, { confirm: external_exports.boolean().default(false) }, async ({ confirm }) => {
+  const before = dotnetSdks();
+  if (before.some((s) => /^8\./.test(s))) return { deja_installe: before };
+  if (!confirm) return { a_montrer: DOTNET_EXPLANATION, commande: "winget install --id Microsoft.DotNet.SDK.8 --source winget", a_faire: "Obtenir l'accord de l'utilisateur puis relancer avec confirm=true." };
+  if (!findOnPath("winget")) throw new Error("winget introuvable : installer le SDK depuis https://dotnet.microsoft.com/download/dotnet/8.0");
+  const r = await new Promise((resolve) => {
+    execFile5("winget", ["install", "--id", "Microsoft.DotNet.SDK.8", "--source", "winget", "-e", "--accept-package-agreements", "--accept-source-agreements"], { windowsHide: true, timeout: 9e5, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => resolve({ code: err ? err.code ?? 1 : 0, out: `${stdout}${stderr}` }));
+  });
+  const after = dotnetSdks();
+  return { ok: after.some((s) => /^8\./.test(s)), sdks: after, journal: r.out.split(/\r?\n/).slice(-8).join("\n"), note: after.length ? null : "Install\xE9 mais pas encore visible : fermer et rouvrir le terminal / Claude Code (PATH)." };
+});
+tool("unity", "build_unity_plugin", { short: "Compile le plugin BepInEx g\xE9n\xE9r\xE9 (dotnet build -c Release) et renvoie la DLL \xE0 d\xE9ployer avec deploy_files (confirm=true) dans BepInEx/plugins. Si le SDK .NET manque, renvoie l'explication \xE0 montrer." }, { game_path: gamePath }, async ({ game_path }) => {
+  const sdks = dotnetSdks();
+  if (!sdks.length) return { sdk_absent: true, a_montrer: DOTNET_EXPLANATION, suite: "install_dotnet_sdk (avec accord), puis relancer build_unity_plugin." };
+  const det = await detectEngine(game_path);
+  const runtime = det.family.value === "unity_il2cpp" ? "il2cpp" : "mono";
+  const projDir = path23.join(vraHome(), "projects", gameSlug(game_path), `unity-${runtime}`);
+  if (!fs25.existsSync(projDir)) throw new Error("Projet absent : lancer scaffold_unity_plugin d'abord.");
+  const r = await new Promise((resolve) => {
+    execFile5("dotnet", ["build", "-c", "Release", "-nologo"], { cwd: projDir, windowsHide: true, timeout: 6e5, maxBuffer: 32 * 1024 * 1024 }, (err, stdout, stderr) => resolve({ code: err ? 1 : 0, out: `${stdout}${stderr}` }));
+  });
+  const dlls = [];
+  const walkDll = (d) => {
+    for (const e of fs25.existsSync(d) ? fs25.readdirSync(d, { withFileTypes: true }) : []) {
+      const p = path23.join(d, e.name);
+      if (e.isDirectory()) walkDll(p);
+      else if (/^VRA\..*\.dll$/i.test(e.name)) dlls.push(p);
+    }
+  };
+  walkDll(path23.join(projDir, "bin", "Release"));
+  const errors = r.out.split(/\r?\n/).filter((l) => /error [A-Z]+\d+/.test(l)).slice(0, 15);
+  logEntry(game_path, { kind: "result", summary: `Compilation du plugin Unity : ${r.code === 0 ? "r\xE9ussie" : "\xE9chec"}`, details: { errors } });
+  const scan = scanGame(game_path);
+  const exe = pickMainExe(scan).exe;
+  const exeDir = exe ? path23.dirname(abs(scan, exe)) : scan.root;
+  return { ok: r.code === 0 && dlls.length > 0, dll: dlls[0] ?? null, erreurs: errors, deploiement: dlls[0] ? { source_dir: path23.dirname(dlls[0]), files: [path23.basename(dlls[0])], target_root: path23.join(exeDir, "BepInEx", "plugins") } : null, suite: r.code === 0 ? "deploy_files avec ces valeurs (plan, puis confirm=true apr\xE8s accord)." : "Corriger les erreurs (noms de classes/m\xE9thodes \xE0 confirmer avec UnityExplorer), puis relancer." };
+});
 tool("core", "enable_tool_family", { short: "Active ou d\xE9sactive une famille d'outils (unreal, unity, reengine, godot, inspect, lab, web) pour \xE9conomiser le contexte." }, { family: external_exports.enum(["web", "unreal", "unity", "reengine", "godot", "inspect", "lab"]), enabled: external_exports.boolean().default(true) }, ({ family, enabled }) => {
   setFamilyEnabled(family, enabled);
   server.sendToolListChanged();

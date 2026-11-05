@@ -8,7 +8,7 @@ Version : `globalgamemanagers` / `data.unity3d` (observé) ou FileVersion de `Un
 | Palier | Outil | Code ? |
 | --- | --- | --- |
 | 2 | UUVR via Rai Pal (`install_tool_plan rai-pal`, installeur lancé par l'utilisateur) **ou** UnityVRMod (BepInEx 6, `unityvrmod`) | non |
-| 3 | Plugin BepInEx + Harmony (`scaffold_unity_plugin`) : HUD en World Space, visée à la main, gestes | oui |
+| 3 | Plugin BepInEx + Harmony (`scaffold_unity_plugin` → `build_unity_plugin` → `deploy_files`) : HUD en World Space, visée à la main, gestes | oui (SDK .NET 8, voir [../build-tools.md](../build-tools.md)) |
 
 **Chaîne BepInEx** : Mono → BepInEx 5 (`bepinex5`) pour un plugin maison ; UnityVRMod exige BepInEx 6 (`bepinex6-mono`).
 Ne pas mélanger BepInEx 5 et 6 dans le même jeu. Premier lancement : génère `BepInEx/config` et `BepInEx/LogOutput.log`.

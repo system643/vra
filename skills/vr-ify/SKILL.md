@@ -44,7 +44,8 @@ Réponds à l'utilisateur en français, simplement : il n'est pas forcément tec
    Présente : plafond, cible, escalier de paliers (premier palier jouable vite), effort estimé, risques, inconnus, ce qui
    permettrait d'aller plus haut. L'utilisateur valide. Consigne la décision (`game_card_write` avec `decision`).
 5. **Préparer et construire** — parcours `prepare_injection` ; `install_tool_plan` → plan montré → `install_tool_apply` ;
-   `quality_checklist init` ; pour le niveau 3+ : `map_game` puis générateur du moteur (`scaffold_*`).
+   `quality_checklist init` ; pour le niveau 3+ : `map_game` puis générateur du moteur (`scaffold_*`). Unity : `build_tools_status`
+   → si le SDK .NET manque, expliquer pourquoi et `install_dotnet_sdk` (accord) → `build_unity_plugin` → `deploy_files`.
 6. **Boucle de test — d'abord le Lab, sans casque** (parcours `lab_optimize`, [references/lab.md](references/lab.md)) :
    `lab_machine_check`, `xr_sim_status`, pont à chaud déployé avec le mod, `lab_launch` (casque simulé), `lab_run_scenario`
    (smoke, head_6dof, world_scale, controllers, hud) puis `lab_matrix` pour essayer des dizaines de réglages à chaud et garder
@@ -80,6 +81,8 @@ Détails et critères : [references/ladder.md](references/ladder.md).
 - Inspection en direct et règles Frida : [references/live-inspection.md](references/live-inspection.md)
 - Installation contrôlée et empreintes des outils : [references/install-footprints.md](references/install-footprints.md)
 - Banc d'essai sans casque (simulateur, Operator, pont à chaud, scénarios, matrice) : [references/lab.md](references/lab.md)
+- Piloter l'interface du jeu (menus, « Nouvelle partie », recette lancement → en jeu) : [references/game-ui.md](references/game-ui.md)
+- Outils de compilation (SDK .NET 8 pour les mods Unity) : [references/build-tools.md](references/build-tools.md)
 - Boucle de test en casque, marqueurs, logs : [references/test-loop.md](references/test-loop.md)
 - Checklist qualité : [references/quality-checklist.md](references/quality-checklist.md)
 - Quest + Virtual Desktop : [references/quest-vd.md](references/quest-vd.md) — confort : [references/comfort.md](references/comfort.md)

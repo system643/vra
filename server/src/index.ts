@@ -31,6 +31,17 @@ import { BRIDGE_OPS, bridgeDir, bridgeFamilyKey, readState as readBridgeStateFil
 import { guessOperatorMap, operator, readOperatorMap, resetOperator, saveImageContent, writeOperatorMap, type OperatorMap } from "./lab/operator.js";
 import { builtinScenario, expandAxes, processAlive, readLabSession, runMatrix, runScenario, writeLabSession, type LabSession, type ScenarioReport, type Step, type Variant } from "./lab/scenario.js";
 import { analyzeFrame, compareFrames } from "./frames.js";
+import { pidByExe, readRecipe, runUiSteps, saveRecipe, uiCapture, uiClick, uiClickText, uiKey, uiOcr, uiType, uiWaitText, type UiStep, type UiTarget } from "./lab/input.js";
+import { execFile, execFileSync } from "node:child_process";
+
+function findOnPath(cmd: string): string | null {
+  try {
+    const out = execFileSync(process.platform === "win32" ? "where" : "which", [cmd], { encoding: "utf8", windowsHide: true });
+    return out.split(/\r?\n/)[0]?.trim() || null;
+  } catch {
+    return null;
+  }
+}
 
 const VERSION = "0.1.0";
 
@@ -637,8 +648,8 @@ tool(
   "lab",
   "lab_launch",
   { short: "Lance le jeu sur le casque simulé (XR_RUNTIME_JSON par processus), avec la couche Meta XR Operator pour piloter tête/manettes et capturer, et injecte UEVR automatiquement (--attach) pour Unreal. Prépare le pont à chaud (VRA_LAB_DIR) et attend sa première télémétrie." },
-  { game_path: gamePath, exe: z.string().optional(), args: z.array(z.string()).optional(), simulator_json: z.string().optional(), operator_dir: z.string().optional(), inject_uevr: z.boolean().optional(), injector_path: z.string().optional(), window_title: z.string().optional().describe("Titre de la fenêtre du simulateur pour les captures de secours"), wait_bridge_seconds: z.number().int().min(0).max(300).default(60) },
-  async ({ game_path, exe, args, simulator_json, operator_dir, inject_uevr, injector_path, window_title, wait_bridge_seconds }) => {
+  { game_path: gamePath, exe: z.string().optional(), args: z.array(z.string()).optional(), simulator_json: z.string().optional(), operator_dir: z.string().optional(), inject_uevr: z.boolean().optional(), injector_path: z.string().optional(), window_title: z.string().optional().describe("Titre de la fenêtre du simulateur pour les captures de secours"), wait_bridge_seconds: z.number().int().min(0).max(300).default(60), run_menu_recipe: z.boolean().default(true).describe("Rejouer la recette de menus enregistrée (lancement → en jeu)") },
+  async ({ game_path, exe, args, simulator_json, operator_dir, inject_uevr, injector_path, window_title, wait_bridge_seconds, run_menu_recipe }) => {
     await assertNoAntiCheat(game_path);
     const sim = await findSimulatorRuntime(simulator_json);
     if (!sim.json) throw new Error(`Meta XR Simulator introuvable. Installer : ${DOWNLOADS.simulator} (ou passer simulator_json).`);
@@ -670,7 +681,13 @@ tool(
         await new Promise((res) => setTimeout(res, 1000));
       }
     }
-    return { ...r, session, pont_a_chaud: bridge, pilotage_agent: op.layerDir ? "Meta XR Operator chargé : lab_operator_tools pour lister ses outils" : "Operator absent : pas de pilotage tête/manettes, captures d'écran de secours seulement" };
+    let menus: unknown = "aucune recette enregistrée (naviguer avec game_ui_* puis game_ui_recipe action=save)";
+    const recipe = readRecipe(game_path);
+    if (run_menu_recipe && recipe && r.game.pid) {
+      const res = await runUiSteps({ pid: r.game.pid, gamePath: game_path }, recipe.steps).catch((e: Error) => [{ ok: false, error: e.message }]);
+      menus = { recette: recipe.name, ok: (res as Array<{ ok: boolean }>).every((x) => x.ok), resultats: res };
+    }
+    return { ...r, session, pont_a_chaud: bridge, menus, pilotage_agent: op.layerDir ? "Meta XR Operator chargé : lab_operator_tools pour lister ses outils" : "Operator absent : pas de pilotage tête/manettes, captures d'écran de secours seulement" };
   },
 );
 
@@ -739,6 +756,7 @@ const stepSchema = z.union([
   z.object({ op: z.literal("assert_state"), label: z.string(), path: z.string(), cmp: z.enum([">", "<", "==", "~"]), value: z.union([z.number(), z.string(), z.boolean()]), tol: z.number().optional() }),
   z.object({ op: z.literal("assert_delta"), a: z.string(), b: z.string(), path: z.string(), min: z.number().optional(), max: z.number().optional(), expect_ratio: z.object({ per: z.number(), unitsPath: z.string().optional(), tol: z.number() }).optional() }),
   z.object({ op: z.literal("alive") }),
+  z.object({ op: z.literal("ui"), step: z.any().describe("{do:'click_text',text} | {do:'click',x,y} | {do:'key',keys} | {do:'type',text} | {do:'wait_text',text,timeout_s} | {do:'wait',ms}"), label: z.string().optional() }),
 ]);
 
 async function closeFromReport(s: LabSession, closes: string[], rep: ScenarioReport) {
@@ -806,7 +824,11 @@ tool(
           const t0 = Date.now();
           while (Date.now() - t0 < 90000) {
             const ping = await sendCommands(s.bridgeDir, [{ op: "ping" }], 3000);
-            if (!ping.timedOut) return next;
+            if (!ping.timedOut) {
+              const recipe = readRecipe(s.gamePath);
+              if (recipe && next.pid) await runUiSteps({ pid: next.pid, gamePath: s.gamePath }, recipe.steps).catch(() => undefined);
+              return next;
+            }
           }
           return null;
         }
@@ -826,6 +848,150 @@ tool(
 tool("lab", "analyze_vr_frame", { short: "Analyse automatique d'une capture VR (PNG) : œil noir, rendu mono (yeux identiques), décalage stéréo, désalignement vertical, image noire. Résultats « déduits » à compléter par l'examen visuel (Read)." }, { file: z.string(), layout: z.enum(["auto", "side_by_side", "single"]).default("auto") }, ({ file, layout }) => analyzeFrame(file, layout));
 
 tool("lab", "compare_vr_frames", { short: "Compare deux captures (ex. avant/après un mouvement de tête simulé) : image figée ou non, glissement de la vue et conformité au sens attendu (left/right/up/down/change/same)." }, { before: z.string(), after: z.string(), expect: z.enum(["left", "right", "up", "down", "change", "same"]).optional() }, ({ before, after, expect }) => compareFrames(before, after, expect));
+
+/* ───────────────────────── Game UI control (menus: "Nouvelle partie", Entrée…) ───────────────────────── */
+
+async function uiTarget(game_path: string): Promise<UiTarget> {
+  await assertNoAntiCheat(game_path);
+  const s = readLabSession();
+  if (s && path.resolve(s.gamePath) === path.resolve(game_path) && s.pid && processAlive(s.pid)) return { pid: s.pid, gamePath: game_path };
+  const scan = scanGame(game_path);
+  const exe = pickMainExe(scan).exe;
+  const pid = exe ? pidByExe(path.basename(exe)) : null;
+  if (!pid) throw new Error("Le jeu ne tourne pas : le lancer d'abord (lab_launch ou launch_and_capture).");
+  return { pid, gamePath: game_path };
+}
+
+function draftFile(game_path: string) {
+  return path.join(profileDir(game_path), "lab", "menu_recipe_draft.json");
+}
+function recordDraft(game_path: string, step: UiStep) {
+  const f = draftFile(game_path);
+  const cur = fs.existsSync(f) ? (JSON.parse(fs.readFileSync(f, "utf8")) as UiStep[]) : [];
+  cur.push(step);
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  fs.writeFileSync(f, JSON.stringify(cur, null, 2), "utf8");
+}
+
+tool("lab", "game_ui_look", { short: "Regarde l'interface du jeu : capture de la fenêtre (à examiner avec Read) + texte lu par l'OCR de Windows avec la position de chaque ligne (en pixels de la capture). Point de départ pour naviguer dans les menus." }, { game_path: gamePath }, async ({ game_path }) => {
+  const t = await uiTarget(game_path);
+  const cap = await uiCapture(t);
+  const ocr = await uiOcr(cap.file);
+  return { capture: cap.file, fenetre: { largeur: cap.w, hauteur: cap.h, premier_plan: cap.foreground }, langue_ocr: ocr.language, texte: ocr.lines.map((l) => ({ texte: l.text, x: l.x, y: l.y, w: l.w, h: l.h })).slice(0, 80) };
+});
+
+tool("lab", "game_ui_click", { short: "Clique dans le jeu : sur un texte visible (« Nouvelle partie », « Continuer »…) trouvé par OCR, ou à des coordonnées de la capture. Refusé si la fenêtre du jeu n'est pas au premier plan ; s'arrête si l'utilisateur bouge la souris." }, { game_path: gamePath, text: z.string().optional(), x: z.number().optional(), y: z.number().optional(), button: z.enum(["left", "right"]).default("left"), count: z.number().int().min(1).max(3).default(1), record: z.boolean().default(true) }, async ({ game_path, text, x, y, button, count, record }) => {
+  const t = await uiTarget(game_path);
+  let r: unknown;
+  if (text) {
+    r = await uiClickText(t, text);
+    if (record) recordDraft(game_path, { do: "click_text", text });
+  } else if (x !== undefined && y !== undefined) {
+    r = await uiClick(t, x, y, { button, count });
+    if (record) recordDraft(game_path, { do: "click", x, y });
+  } else throw new Error("text ou x/y requis");
+  return r;
+});
+
+tool("lab", "game_ui_key", { short: "Appuie sur des touches dans le jeu (« enter », « esc », « space », « down », « ctrl+s », « w » maintenu avec hold_ms…). Codes de balayage matériels : compatibles avec la plupart des jeux." }, { game_path: gamePath, keys: z.string(), repeat: z.number().int().min(1).max(50).default(1), hold_ms: z.number().int().min(30).max(10000).default(60), record: z.boolean().default(true) }, async ({ game_path, keys, repeat, hold_ms, record }) => {
+  const t = await uiTarget(game_path);
+  const r = await uiKey(t, keys, { repeat, hold_ms });
+  if (record) recordDraft(game_path, { do: "key", keys, repeat, hold_ms });
+  return r;
+});
+
+tool("lab", "game_ui_type", { short: "Tape du texte dans le jeu (nom de sauvegarde, pseudo…)." }, { game_path: gamePath, text: z.string().max(200), record: z.boolean().default(true) }, async ({ game_path, text, record }) => {
+  const t = await uiTarget(game_path);
+  const r = await uiType(t, text);
+  if (record) recordDraft(game_path, { do: "type", text });
+  return r;
+});
+
+tool("lab", "game_ui_wait_text", { short: "Attend qu'un texte apparaisse à l'écran (fin d'un chargement, menu principal…) avant de continuer." }, { game_path: gamePath, text: z.string(), timeout_s: z.number().int().min(1).max(600).default(60), record: z.boolean().default(true) }, async ({ game_path, text, timeout_s, record }) => {
+  const t = await uiTarget(game_path);
+  const r = await uiWaitText(t, text, timeout_s * 1000);
+  if (record) recordDraft(game_path, { do: "wait_text", text, timeout_s });
+  return r;
+});
+
+tool("lab", "game_ui_recipe", { short: "Recette de menus « lancement → en jeu » : les actions game_ui_* sont enregistrées en brouillon ; save garde le brouillon comme recette, run la rejoue (lab_launch et les relances de lab_matrix la rejouent automatiquement)." }, { game_path: gamePath, action: z.enum(["get", "save", "run", "clear_draft", "set"]), name: z.string().optional(), steps: z.array(z.any()).optional() }, async ({ game_path, action, name, steps }) => {
+  if (action === "get") return { recette: readRecipe(game_path), brouillon: fs.existsSync(draftFile(game_path)) ? JSON.parse(fs.readFileSync(draftFile(game_path), "utf8")) : [] };
+  if (action === "clear_draft") {
+    fs.rmSync(draftFile(game_path), { force: true });
+    return { ok: true };
+  }
+  if (action === "save" || action === "set") {
+    const list = action === "set" ? (steps as UiStep[]) : fs.existsSync(draftFile(game_path)) ? (JSON.parse(fs.readFileSync(draftFile(game_path), "utf8")) as UiStep[]) : [];
+    if (!list?.length) throw new Error("Rien à enregistrer : naviguer d'abord avec game_ui_* (ou passer steps avec action=set).");
+    saveRecipe(game_path, name ?? "lancement_vers_jeu", list);
+    fs.rmSync(draftFile(game_path), { force: true });
+    logEntry(game_path, { kind: "setting", summary: `Recette de menus enregistrée (${list.length} étapes)` });
+    return { ok: true, etapes: list.length };
+  }
+  const rec = readRecipe(game_path);
+  if (!rec) throw new Error("Aucune recette enregistrée pour ce jeu.");
+  const t = await uiTarget(game_path);
+  const res = await runUiSteps(t, rec.steps);
+  return { recette: rec.name, resultats: res, ok: res.every((r) => r.ok) };
+});
+
+/* ───────────────────────── Build tools (.NET SDK for Unity plugins) ───────────────────────── */
+
+const DOTNET_EXPLANATION =
+  "Pour fabriquer le mod VR (plugin Unity), il faut le SDK .NET 8 de Microsoft : sans lui, on ne peut pas transformer le code du mod en fichier utilisable par le jeu. Il vient de Microsoft, gratuitement, via le gestionnaire officiel de Windows (winget). Commande : winget install --id Microsoft.DotNet.SDK.8 --source winget";
+
+function dotnetSdks(): string[] {
+  try {
+    const out = execFileSync("dotnet", ["--list-sdks"], { encoding: "utf8", windowsHide: true });
+    return out.split(/\r?\n/).map((l) => l.trim()).filter((l) => /^\d+\./.test(l));
+  } catch {
+    return [];
+  }
+}
+
+tool("core", "build_tools_status", { short: "Vérifie les outils de compilation : SDK .NET (plugins Unity/BepInEx), winget. Donne l'explication à montrer à l'utilisateur s'il manque quelque chose." }, {}, () => {
+  const sdks = dotnetSdks();
+  return { dotnet_sdks: sdks, pret_unity: sdks.some((s) => /^(6|7|8|9|10)\./.test(s)), winget: !!findOnPath("winget"), explication_si_absent: sdks.length ? null : DOTNET_EXPLANATION };
+});
+
+tool("core", "install_dotnet_sdk", { short: "Installe le SDK .NET 8 de Microsoft via winget (source officielle). Sans confirm=true : renvoie l'explication et la commande à montrer à l'utilisateur." }, { confirm: z.boolean().default(false) }, async ({ confirm }) => {
+  const before = dotnetSdks();
+  if (before.some((s) => /^8\./.test(s))) return { deja_installe: before };
+  if (!confirm) return { a_montrer: DOTNET_EXPLANATION, commande: "winget install --id Microsoft.DotNet.SDK.8 --source winget", a_faire: "Obtenir l'accord de l'utilisateur puis relancer avec confirm=true." };
+  if (!findOnPath("winget")) throw new Error("winget introuvable : installer le SDK depuis https://dotnet.microsoft.com/download/dotnet/8.0");
+  const r = await new Promise<{ code: number; out: string }>((resolve) => {
+    execFile("winget", ["install", "--id", "Microsoft.DotNet.SDK.8", "--source", "winget", "-e", "--accept-package-agreements", "--accept-source-agreements"], { windowsHide: true, timeout: 900000, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => resolve({ code: err ? ((err as NodeJS.ErrnoException & { code?: number }).code as unknown as number) ?? 1 : 0, out: `${stdout}${stderr}` }));
+  });
+  const after = dotnetSdks();
+  return { ok: after.some((s) => /^8\./.test(s)), sdks: after, journal: r.out.split(/\r?\n/).slice(-8).join("\n"), note: after.length ? null : "Installé mais pas encore visible : fermer et rouvrir le terminal / Claude Code (PATH)." };
+});
+
+tool("unity", "build_unity_plugin", { short: "Compile le plugin BepInEx généré (dotnet build -c Release) et renvoie la DLL à déployer avec deploy_files (confirm=true) dans BepInEx/plugins. Si le SDK .NET manque, renvoie l'explication à montrer." }, { game_path: gamePath }, async ({ game_path }) => {
+  const sdks = dotnetSdks();
+  if (!sdks.length) return { sdk_absent: true, a_montrer: DOTNET_EXPLANATION, suite: "install_dotnet_sdk (avec accord), puis relancer build_unity_plugin." };
+  const det = await detectEngine(game_path);
+  const runtime = det.family.value === "unity_il2cpp" ? "il2cpp" : "mono";
+  const projDir = path.join(vraHome(), "projects", gameSlug(game_path), `unity-${runtime}`);
+  if (!fs.existsSync(projDir)) throw new Error("Projet absent : lancer scaffold_unity_plugin d'abord.");
+  const r = await new Promise<{ code: number; out: string }>((resolve) => {
+    execFile("dotnet", ["build", "-c", "Release", "-nologo"], { cwd: projDir, windowsHide: true, timeout: 600000, maxBuffer: 32 * 1024 * 1024 }, (err, stdout, stderr) => resolve({ code: err ? 1 : 0, out: `${stdout}${stderr}` }));
+  });
+  const dlls: string[] = [];
+  const walkDll = (d: string) => {
+    for (const e of fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }) : []) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) walkDll(p);
+      else if (/^VRA\..*\.dll$/i.test(e.name)) dlls.push(p);
+    }
+  };
+  walkDll(path.join(projDir, "bin", "Release"));
+  const errors = r.out.split(/\r?\n/).filter((l) => /error [A-Z]+\d+/.test(l)).slice(0, 15);
+  logEntry(game_path, { kind: "result", summary: `Compilation du plugin Unity : ${r.code === 0 ? "réussie" : "échec"}`, details: { errors } });
+  const scan = scanGame(game_path);
+  const exe = pickMainExe(scan).exe;
+  const exeDir = exe ? path.dirname(abs(scan, exe)) : scan.root;
+  return { ok: r.code === 0 && dlls.length > 0, dll: dlls[0] ?? null, erreurs: errors, deploiement: dlls[0] ? { source_dir: path.dirname(dlls[0]), files: [path.basename(dlls[0])], target_root: path.join(exeDir, "BepInEx", "plugins") } : null, suite: r.code === 0 ? "deploy_files avec ces valeurs (plan, puis confirm=true après accord)." : "Corriger les erreurs (noms de classes/méthodes à confirmer avec UnityExplorer), puis relancer." };
+});
 
 /* ───────────────────────── Families ───────────────────────── */
 

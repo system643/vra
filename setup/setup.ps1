@@ -207,7 +207,7 @@ function New-Opt([string]$text, [int]$x, [bool]$checked) {
     return $cb
 }
 $optSim = New-Opt "Installer Meta XR Simulator s'il est trouvé" 12 $true
-$optDotnet = New-Opt "Installer le SDK .NET 8 (plugins Unity)" 320 $false
+$optDotnet = New-Opt "Installer le SDK .NET 8 (mods Unity)" 320 $true
 $optTests = New-Opt "Tests complets (plus long)" 610 $false
 
 # Journal
@@ -324,7 +324,7 @@ function Start-Setup([string]$mode) {
     if ($mode -eq "uninstall") { $argList += "--uninstall" }
     if ($mode -eq "install") {
         if ($optSim.Checked) { $argList += "--install-simulator" }
-        if ($optDotnet.Checked) { $argList += "--dotnet" }
+        if ($optDotnet.Checked) { $argList += "--dotnet" } else { $argList += "--no-dotnet" }
         if ($optTests.Checked) { $argList += "--full-tests" }
     }
     $script:lastMode = $mode

@@ -67,6 +67,9 @@ Si les dossiers ne sont pas trouvés automatiquement : `VRA_XRSIM_JSON=<.json du
    Les noms de réglages UEVR (`VR_RenderingMethod`…) se vérifient dans `config.txt` du profil
    (`%APPDATA%\UnrealVRMod\<exe>\`) ou avec `get_mod_value` avant de lancer une matrice.
 8. Appliquer la meilleure variante (`lab_command`), sauvegarder (`save_config` en UEVR), regarder les captures clés (Read).
+
+Aller du lancement au jeu sans intervention : `game_ui_*` puis `game_ui_recipe action=save` — la recette est rejouée par
+`lab_launch` et après chaque relance de `lab_matrix` ([game-ui.md](game-ui.md)).
 9. Une session casque courte : fermer `comfort`, `framerate`, `world_scale` avec `source=casque`.
 
 ## Règles

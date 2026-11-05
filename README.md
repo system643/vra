@@ -35,7 +35,8 @@ git clone https://github.com/system643/vra.git VR
 2. **Logiciels Meta** du banc d'essai sans casque — boutons « Télécharger » vers les pages officielles ; une fois les
    fichiers dans Téléchargements, sur le Bureau ou dans le dossier `VR`, ils sont trouvés : l'Operator est extrait dans
    les outils de VRA, le simulateur est installé (fenêtre Windows de confirmation). Ces fichiers ne vont jamais sur GitHub.
-3. **Options** — SDK .NET 8 (pour compiler les plugins Unity), tests complets.
+3. **Options** — SDK .NET 8 de Microsoft (coché par défaut : nécessaire pour fabriquer les mods Unity, installé via
+   `winget install --id Microsoft.DotNet.SDK.8 --source winget`), tests complets.
 4. **Installer / mettre à jour** : Node.js est installé via winget s'il manque, puis dépendances, construction, test de
    bout en bout, configuration des clients, logiciels Meta, contrôles (Steam, SteamVR, Virtual Desktop), vérification
    finale (profil du Lab : complet sur une carte dédiée). Journal en direct, rapport dans `Documents\VRA\setup-report.json`.
@@ -48,7 +49,7 @@ ne duplique rien.
 
 Mettre à jour plus tard : `git pull` dans `VR`, puis relancer `setup.cmd`.
 
-Pour développer VRA : `cd server`, `npm install`, `npm run build`, `npm test` (61 tests), `npm run smoke`.
+Pour développer VRA : `cd server`, `npm install`, `npm run build`, `npm test` (63 tests ; le test réel de pilotage de fenêtre : `VRA_UI_TEST=1 npx vitest run test/ui.test.ts`), `npm run smoke`.
 
 Premières demandes à faire à Claude sur ce PC :
 1. « Vérifie si ce PC est prêt pour le VRA Lab » → `lab_machine_check` (profil attendu : complet) puis `xr_sim_status`.
@@ -79,7 +80,7 @@ Dans `Documents\VRA` (modifiable avec la variable d'environnement `VRA_HOME`) :
 | --- | --- |
 | `skills/vr-ify/` | méthode (SKILL.md) + 15 fiches moteur + références |
 | `agents/vr-scout.md`, `agents/vr-engineer.md` | recherche web ; écriture des scripts et plugins |
-| `server/` | serveur MCP `vra` (TypeScript) — 53 outils + 14 parcours guidés (dont le Lab sans casque) |
+| `server/` | serveur MCP `vra` (TypeScript) — 62 outils + 14 parcours guidés (dont le Lab sans casque) |
 | `marker/` | marqueurs de test et captures d'écran (PowerShell) |
 | `evals/` | faux jeux partagés et cas `claude plugin eval` |
 
@@ -100,6 +101,9 @@ Variables : `VRA_HOME` (données), `VRA_TOOL_FAMILIES` (`adaptive` par défaut, 
 | `lab_matrix` | dizaines de variantes testées, plantages contournés, classement |
 | `analyze_vr_frame` / `compare_vr_frames` | œil noir, rendu mono, stéréo, désalignement, sens du mouvement |
 | `steamvr_null_driver` | repli OpenVR (casque fictif immobile), réversible |
+| `game_ui_look` / `game_ui_click` / `game_ui_key` / `game_ui_type` / `game_ui_wait_text` | piloter les menus du jeu (OCR Windows, clic sur « Nouvelle partie »…), seulement dans la fenêtre du jeu |
+| `game_ui_recipe` | recette « lancement → en jeu » rejouée automatiquement par le Lab |
+| `build_tools_status` / `install_dotnet_sdk` / `build_unity_plugin` | SDK .NET 8 et compilation des mods Unity |
 
 Inspection en direct (dernier recours) : `npm install frida` dans `server/`, puis activer la famille `inspect`.
 

@@ -7,7 +7,7 @@
 | Palier | Outil | Code ? |
 | --- | --- | --- |
 | 2 | UnityVRMod build IL2CPP (BepInEx 6, `bepinex6-il2cpp` + `unityvrmod`) ou UUVR via Rai Pal | non |
-| 3 | Plugin BepInEx 6 via Il2CppInterop (`scaffold_unity_plugin` détecte IL2CPP) | oui |
+| 3 | Plugin BepInEx 6 via Il2CppInterop (`scaffold_unity_plugin` → `build_unity_plugin` → `deploy_files`) | oui (SDK .NET 8, voir [../build-tools.md](../build-tools.md)) |
 
 **Cartographie** : pas de DLL C# lisible. `map_game` lit la table de chaînes de `global-metadata.dat` (identifiants, rôle déduit).
 Pour les vraies classes : Cpp2IL ou Il2CppDumper (DLL factices), ou l'analyseur IL2CPP de REA. En jeu : UnityExplorer (build IL2CPP).

@@ -6,6 +6,7 @@ import { analyzeFrame, compareFrames } from "../frames.js";
 import { captureScreen } from "../runtime.js";
 import { readState as readBridgeState, sendCommands } from "./bridge.js";
 import { eulerToQuat, fillTemplate, operator, readOperatorMap, saveImageContent } from "./operator.js";
+import { runUiSteps, type UiStep } from "./input.js";
 
 /**
  * Scenario runner: dozens of actions in ONE tool call (head/controller poses,
@@ -52,7 +53,8 @@ export type Step =
   | { op: "state"; label: string }
   | { op: "assert_state"; label: string; path: string; cmp: ">" | "<" | "==" | "~"; value: number | string | boolean; tol?: number }
   | { op: "assert_delta"; a: string; b: string; path: string; min?: number; max?: number; expect_ratio?: { per: number; unitsPath?: string; tol: number } }
-  | { op: "alive" };
+  | { op: "alive" }
+  | { op: "ui"; step: UiStep; label?: string };
 
 export interface StepResult {
   i: number;
@@ -218,6 +220,13 @@ export async function runScenario(name: string, steps: Step[], session: LabSessi
           report.checks.push({ check: `delta ${st.path} ${st.a}→${st.b}`, ok, detail });
           r.detail = detail;
           if (!ok) throw new Error(detail);
+          break;
+        }
+        case "ui": {
+          if (!session.pid) throw new Error("pid du jeu inconnu");
+          const res = await runUiSteps({ pid: session.pid, gamePath: session.gamePath }, [st.step]);
+          r.detail = res[0]?.detail;
+          if (!res[0]?.ok) throw new Error(res[0]?.error ?? "action d'interface échouée");
           break;
         }
         case "alive": {

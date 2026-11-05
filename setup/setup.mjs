@@ -13,7 +13,8 @@
  *   --full-tests          lance toute la suite de tests (sinon : test de bout en bout rapide)
  *   --skip-tests          aucun test
  *   --install-simulator   lance l'installeur .msi de Meta XR Simulator s'il est trouvé
- *   --dotnet              installe le SDK .NET 8 (winget) s'il manque — pour compiler les plugins Unity
+ *   --dotnet              installe le SDK .NET 8 (winget) s'il manque, sans demander — nécessaire pour fabriquer les mods Unity
+ *   --no-dotnet           ne propose pas l'installation du SDK .NET 8
  *   --uninstall           retire VRA de tous les clients IA (sauvegardes conservées)
  *
  * Règles (les mêmes que VRA) : chaque fichier de configuration est sauvegardé avant modification,
@@ -33,7 +34,7 @@ const IS_WIN = process.platform === "win32";
 /* ───────────────────────── options & events ───────────────────────── */
 
 export function parseArgs(argv) {
-  const o = { status: false, yes: false, dryRun: false, json: false, agents: "auto", skipBuild: false, fullTests: false, skipTests: false, installSimulator: false, dotnet: false, uninstall: false };
+  const o = { status: false, yes: false, dryRun: false, json: false, agents: "auto", skipBuild: false, fullTests: false, skipTests: false, installSimulator: false, dotnet: false, noDotnet: false, uninstall: false };
   for (const a of argv) {
     if (a === "--yes" || a === "-y") o.yes = true;
     else if (a === "--dry-run") o.dryRun = true;
@@ -44,6 +45,7 @@ export function parseArgs(argv) {
     else if (a === "--skip-tests") o.skipTests = true;
     else if (a === "--install-simulator") o.installSimulator = true;
     else if (a === "--dotnet") o.dotnet = true;
+    else if (a === "--no-dotnet") o.noDotnet = true;
     else if (a === "--uninstall") o.uninstall = true;
     else if (a === "--status") o.status = true;
   }
@@ -468,12 +470,20 @@ async function stepOptional() {
   if (IS_WIN) {
     const dn = which("dotnet");
     const sdks = dn ? run("dotnet", ["--list-sdks"]).out : "";
-    if (/^\d+\./m.test(sdks)) step("dotnet", "SDK .NET (plugins Unity)", "ok", sdks.split("\n").at(-1));
-    else if (OPTS.dotnet && !OPTS.dryRun && which("winget")) {
-      step("dotnet", "SDK .NET 8 (winget)", "start");
-      const r = run("winget", ["install", "--id", "Microsoft.DotNet.SDK.8", "-e", "--accept-package-agreements", "--accept-source-agreements", "--silent"]);
-      step("dotnet", "SDK .NET 8", r.code === 0 ? "ok" : "warn", r.code === 0 ? "installé (rouvrir le terminal)" : r.out.slice(-200));
-    } else step("dotnet", "SDK .NET (plugins Unity)", "warn", "absent — utile seulement pour compiler les plugins Unity (relancer avec --dotnet)");
+    if (/^\d+\./m.test(sdks)) step("dotnet", "SDK .NET (fabrication des mods Unity)", "ok", sdks.split("\n").at(-1));
+    else {
+      log("Pour fabriquer les mods VR des jeux Unity, il faut le SDK .NET 8 de Microsoft : sans lui, on ne peut pas transformer le code du mod en fichier utilisable par le jeu. Il vient de Microsoft, gratuitement, via winget.");
+      const go = !OPTS.noDotnet && (OPTS.dotnet || OPTS.yes || (process.stdin.isTTY && !OPTS.json && !OPTS.dryRun ? await ask("Installer le SDK .NET 8 maintenant (winget install --id Microsoft.DotNet.SDK.8 --source winget) ?", true) : false));
+      if (OPTS.dryRun) step("dotnet", "SDK .NET 8", "skip", "winget install --id Microsoft.DotNet.SDK.8 --source winget");
+      else if (!go) step("dotnet", "SDK .NET 8", "warn", "non installé — nécessaire pour les mods Unity (relancer avec --dotnet)");
+      else if (!which("winget")) step("dotnet", "SDK .NET 8", "warn", "winget absent : https://dotnet.microsoft.com/download/dotnet/8.0");
+      else {
+        step("dotnet", "SDK .NET 8 (winget)", "start");
+        const r = run("winget", ["install", "--id", "Microsoft.DotNet.SDK.8", "--source", "winget", "-e", "--accept-package-agreements", "--accept-source-agreements"], { timeout: 900000 });
+        const ok = r.code === 0 || /already installed|déjà installé/i.test(r.out);
+        step("dotnet", "SDK .NET 8", ok ? "ok" : "warn", ok ? "installé (rouvrir le terminal pour qu'il soit visible)" : r.out.split("\n").slice(-3).join(" "));
+      }
+    }
     const steam = regQuery("HKCU\\Software\\Valve\\Steam").find((x) => x.name === "SteamPath")?.data;
     step("steam", "Steam", steam ? "ok" : "warn", steam ?? "non trouvé");
     if (steam) step("steamvr", "SteamVR", fs.existsSync(path.join(steam, "steamapps", "common", "SteamVR")) ? "ok" : "warn", fs.existsSync(path.join(steam, "steamapps", "common", "SteamVR")) ? undefined : "non installé (utile pour les outils OpenVR)");
