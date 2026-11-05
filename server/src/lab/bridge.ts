@@ -53,7 +53,16 @@ function writeAtomic(file: string, data: unknown) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const tmp = `${file}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(data), "utf8");
-  fs.renameSync(tmp, file);
+  // Windows: the rename fails (EPERM/EBUSY) while the mod is reading the file — retry briefly.
+  for (let k = 0; ; k++) {
+    try {
+      fs.renameSync(tmp, file);
+      return;
+    } catch (e) {
+      if (k >= 20 || !["EPERM", "EBUSY", "EACCES"].includes((e as NodeJS.ErrnoException).code ?? "")) throw e;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
+    }
+  }
 }
 
 export function readState(dir: string): Record<string, unknown> | null {

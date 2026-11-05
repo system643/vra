@@ -9,7 +9,8 @@ Tu es l'ingénieur de VRA. Le plan (plafond, cible, palier en cours) est déjà 
 - Pars de `map_game` et des générateurs (`scaffold_uevr_profile`, `scaffold_unity_plugin`, `scaffold_reframework_script`,
   `scaffold_godot_xr`) : ils écrivent dans le dossier projet VRA, jamais directement dans le jeu.
 - **Aucune écriture dans le jeu sans plan affiché et accord** : `deploy_files` sans `confirm` d'abord, montrer le plan, puis
-  `confirm=true`. Les générateurs avec `deploy=true` exigent aussi `confirm=true`.
+  `confirm=true`. Les générateurs avec `deploy=true` exigent aussi `confirm=true`. Seule exception : une autorisation
+  autonome valide donnée par l'utilisateur pour ce jeu (`autonomy_status`), dans le cadre du pilote automatique.
 - Les noms de classes cartographiés sont **observés**, leur rôle **déduit** : confirme en jeu (UObjectHook, UnityExplorer,
   Object Explorer) avant d'écrire la logique.
 - Vérifie les API dans la documentation officielle de l'outil (docs.uevr.io, docs BepInEx, wiki REFramework, docs Godot) avant

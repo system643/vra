@@ -74,4 +74,39 @@ describe("installation en une commande (setup.mjs)", () => {
   it("dossier des données : VRA_HOME prioritaire", () => {
     expect(setup.vraHome({ VRA_HOME: path.join(T, "x") })).toBe(path.join(T, "x"));
   });
+
+  it("mode autonome : règles ajoutées à permissions.allow sans rien perdre, idempotent, retirables", () => {
+    const env = { ...process.env, VRA_HOME: path.join(T, "home2"), CLAUDE_CONFIG_DIR: path.join(T, "claude") };
+    const f = setup.claudeSettingsFile(env);
+    expect(f).toBe(path.join(T, "claude", "settings.json"));
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, JSON.stringify({ model: "opus", permissions: { allow: ["Bash(git status)"], deny: ["Bash(rm:*)"] } }));
+    const r = setup.upsertClaudePermissions(f, setup.AUTONOMOUS_RULES, { env });
+    expect(r.changed && fs.existsSync(r.backup)).toBe(true);
+    const d = JSON.parse(fs.readFileSync(f, "utf8"));
+    expect(d.model).toBe("opus");
+    expect(d.permissions.deny).toEqual(["Bash(rm:*)"]);
+    expect(d.permissions.allow).toEqual(["Bash(git status)", ...setup.AUTONOMOUS_RULES]);
+    expect(setup.upsertClaudePermissions(f, setup.AUTONOMOUS_RULES, { env }).changed).toBe(false);
+    setup.upsertClaudePermissions(f, setup.AUTONOMOUS_RULES, { env, remove: true });
+    expect(JSON.parse(fs.readFileSync(f, "utf8")).permissions.allow).toEqual(["Bash(git status)"]);
+  });
+});
+
+describe("lanceur du pilote automatique (autopilot.mjs)", async () => {
+  // @ts-ignore — plain ESM script
+  const ap = await import("../../setup/autopilot.mjs");
+  const { gameSlug } = await import("../src/paths.js");
+
+  it("même identifiant de jeu que le serveur, options, prompt sans question", () => {
+    for (const p of ["C:\\Jeux\\Été Héroïque", "D:/SteamLibrary/steamapps/common/Escape the Backrooms"]) expect(ap.gameSlug(p)).toBe(gameSlug(p));
+    expect(ap.parseArgs(["D:\\Jeu", "--attempts=20", "--hours=2", "--contra=juste à la manette"])).toMatchObject({ game: "D:\\Jeu", attempts: 20, hours: 2, contra: "juste à la manette" });
+    const prompt = ap.buildPrompt({ game: "D:\\Jeu", attempts: 60, hours: 6, contra: "" }, ap.grantQuote("D:\\Jeu", new Date("2026-11-05T10:00:00Z")));
+    expect(prompt).toContain("vr_autopilot");
+    expect(prompt).toContain("autonomy_grant");
+    expect(prompt).toContain("attempts=60");
+    expect(prompt).toMatch(/ne pose aucune question/);
+    expect(ap.claudeArgs(["--resume", "x"])).toEqual(expect.arrayContaining(["-p", "--allowedTools", "--max-turns", "--resume", "x"]));
+    expect(ap.ALLOWED_TOOLS).not.toContain("Bash");
+  });
 });

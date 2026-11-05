@@ -15,6 +15,8 @@
  *   --install-simulator   lance l'installeur .msi de Meta XR Simulator s'il est trouvé
  *   --dotnet              installe le SDK .NET 8 (winget) s'il manque, sans demander — nécessaire pour fabriquer les mods Unity
  *   --no-dotnet           ne propose pas l'installation du SDK .NET 8
+ *   --autonomous          mode autonome : Claude Code n'interrompt plus le pilote automatique pour des permissions
+ *                         (outils VRA, recherche web, lecture de fichiers ajoutés à ~/.claude/settings.json, sauvegardé)
  *   --uninstall           retire VRA de tous les clients IA (sauvegardes conservées)
  *
  * Règles (les mêmes que VRA) : chaque fichier de configuration est sauvegardé avant modification,
@@ -34,7 +36,7 @@ const IS_WIN = process.platform === "win32";
 /* ───────────────────────── options & events ───────────────────────── */
 
 export function parseArgs(argv) {
-  const o = { status: false, yes: false, dryRun: false, json: false, agents: "auto", skipBuild: false, fullTests: false, skipTests: false, installSimulator: false, dotnet: false, noDotnet: false, uninstall: false };
+  const o = { status: false, yes: false, dryRun: false, json: false, agents: "auto", skipBuild: false, fullTests: false, skipTests: false, installSimulator: false, dotnet: false, noDotnet: false, autonomous: false, uninstall: false };
   for (const a of argv) {
     if (a === "--yes" || a === "-y") o.yes = true;
     else if (a === "--dry-run") o.dryRun = true;
@@ -46,6 +48,7 @@ export function parseArgs(argv) {
     else if (a === "--install-simulator") o.installSimulator = true;
     else if (a === "--dotnet") o.dotnet = true;
     else if (a === "--no-dotnet") o.noDotnet = true;
+    else if (a === "--autonomous") o.autonomous = true;
     else if (a === "--uninstall") o.uninstall = true;
     else if (a === "--status") o.status = true;
   }
@@ -162,6 +165,31 @@ export const TOML_BEGIN = "# >>> VRA (bloc géré par setup VRA, ne pas modifier
 export const TOML_END = "# <<< VRA <<<";
 
 const tomlStr = (s) => `"${String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+
+/** Permission rules added by the "autonomous mode" option (Claude Code settings.json, permissions.allow). */
+export const AUTONOMOUS_RULES = ["mcp__plugin_vra_vra", "WebSearch", "WebFetch", "Read"];
+
+export function claudeSettingsFile(env = process.env) {
+  const dir = env.CLAUDE_CONFIG_DIR && env.CLAUDE_CONFIG_DIR.trim() ? env.CLAUDE_CONFIG_DIR.trim() : path.join(homeDir(env), ".claude");
+  return path.join(dir, "settings.json");
+}
+
+/** Add (or remove) rules in permissions.allow, keeping everything else; backup before writing; never rewrites non-strict JSON. */
+export function upsertClaudePermissions(file, rules, { remove = false, dryRun = false, env = process.env } = {}) {
+  const r = readJsonLoose(file);
+  if (!r.ok) return { changed: false, error: `fichier non JSON strict : ${file} — ajouter à la main dans permissions.allow : ${rules.join(", ")}` };
+  const data = r.data ?? {};
+  data.permissions = data.permissions && typeof data.permissions === "object" ? data.permissions : {};
+  const allow = Array.isArray(data.permissions.allow) ? data.permissions.allow : [];
+  const next = remove ? allow.filter((x) => !rules.includes(x)) : [...allow, ...rules.filter((x) => !allow.includes(x))];
+  if (JSON.stringify(next) === JSON.stringify(allow)) return { changed: false };
+  if (dryRun) return { changed: true, dryRun: true };
+  data.permissions.allow = next;
+  const backup = backupFile(file, env);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
+  return { changed: true, backup };
+}
 
 export function codexBlock(serverPath, env) {
   const lines = [TOML_BEGIN, "[mcp_servers.vra]", `command = "node"`, `args = [${tomlStr(serverPath)}]`, "startup_timeout_sec = 30", "", "[mcp_servers.vra.env]"];
@@ -466,6 +494,38 @@ async function stepMeta() {
   return pk;
 }
 
+function stepAutonomous(remove) {
+  const file = claudeSettingsFile();
+  if (remove) {
+    const r = upsertClaudePermissions(file, AUTONOMOUS_RULES, { remove: true, dryRun: OPTS.dryRun });
+    if (r.changed) step("autonomous", "Mode autonome retiré des permissions de Claude Code", OPTS.dryRun ? "skip" : "ok", file);
+    return;
+  }
+  if (!OPTS.autonomous) {
+    step("autonomous", "Mode autonome (pilote automatique sans interruption)", "skip", "non coché : Claude Code demandera les permissions (autopilot.cmd n'en a pas besoin)");
+    return;
+  }
+  const r = upsertClaudePermissions(file, AUTONOMOUS_RULES, { dryRun: OPTS.dryRun });
+  if (r.error) step("autonomous", "Mode autonome", "warn", r.error);
+  else step("autonomous", "Mode autonome : outils VRA, recherche web et lecture autorisés sans question", OPTS.dryRun ? "skip" : "ok", `${file}${r.changed ? "" : " (déjà à jour)"}${r.backup ? " — sauvegarde faite" : ""}`);
+}
+
+/** Meta's official CLI (npm package "metavr", repo meta-quest/agentic-tools): controls Meta XR Simulator. */
+function stepMetavr() {
+  const title = "metavr (CLI officielle de Meta : pilotage du simulateur)";
+  const bin = which("metavr");
+  if (bin) {
+    step("metavr", title, "ok", bin);
+    return;
+  }
+  if (OPTS.dryRun) {
+    step("metavr", title, "skip", "npx -y metavr --version");
+    return;
+  }
+  const r = run("npx", ["-y", "metavr", "--version"], { timeout: 600000 });
+  step("metavr", title, r.code === 0 ? "ok" : "warn", r.code === 0 ? `prêt via npx (${r.out.split("\n").at(-1)})` : `indisponible pour l'instant (${r.out.split("\n").slice(-2).join(" ")}) : VRA réessaiera via npx`);
+}
+
 async function stepOptional() {
   if (IS_WIN) {
     const dn = which("dotnet");
@@ -553,6 +613,7 @@ export async function main(argv = process.argv.slice(2)) {
   emit({ type: "start", repo: REPO, dryRun: OPTS.dryRun, uninstall: OPTS.uninstall });
   if (OPTS.uninstall) {
     const chosen = stepAgents(true);
+    stepAutonomous(true);
     emit({ type: "summary", text: `VRA retiré de : ${chosen.join(", ") || "aucun client"}. Les sauvegardes sont dans ${path.join(vraHome(), "backups", "_setup")}.` });
     return 0;
   }
@@ -565,6 +626,8 @@ export async function main(argv = process.argv.slice(2)) {
   stepVraHome();
   const chosen = stepAgents(false);
   await stepMeta();
+  stepMetavr();
+  stepAutonomous(false);
   await stepOptional();
   await stepVerify();
   const failed = report.steps.filter((s) => s.status === "fail");
@@ -579,6 +642,7 @@ export async function main(argv = process.argv.slice(2)) {
     failed.length ? `Installation terminée avec ${failed.length} erreur(s) et ${warns.length} point(s) à voir.` : warns.length ? `Installation terminée (${warns.length} point(s) facultatif(s) à voir).` : "Installation terminée : tout est prêt.",
     `Clients IA configurés : ${chosen.join(", ") || "aucun"}.`,
     "Ensuite : ouvre Claude Code (commande « claude ») n'importe où et dis : « Je veux jouer à <jeu> en VR ».",
+    "Sans surveillance : autopilot.cmd \"<dossier du jeu>\" (ou le bouton « Pilote automatique » de cette fenêtre).",
   ];
   emit({ type: "summary", text: lines.join("\n"), failed: failed.length, warnings: warns.length });
   return failed.length ? 1 : 0;

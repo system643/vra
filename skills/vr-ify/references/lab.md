@@ -68,13 +68,21 @@ Si les dossiers ne sont pas trouvés automatiquement : `VRA_XRSIM_JSON=<.json du
    (`%APPDATA%\UnrealVRMod\<exe>\`) ou avec `get_mod_value` avant de lancer une matrice.
 8. Appliquer la meilleure variante (`lab_command`), sauvegarder (`save_config` en UEVR), regarder les captures clés (Read).
 
+Contrôle complet du simulateur avec la CLI officielle de Meta :
+- `xrsim_control` : démarrage, casque, fréquence, manettes, vidéo MP4, FPS ;
+- `xrsim_diagnose` : maillon cassé.
+
+`lab_launch` règle le simulateur tout seul. `lab_stop` ferme le jeu lancé par VRA. Pour tout enchaîner sans
+surveillance : [autopilot.md](autopilot.md).
+
 Aller du lancement au jeu sans intervention : `game_ui_*` puis `game_ui_recipe action=save` — la recette est rejouée par
 `lab_launch` et après chaque relance de `lab_matrix` ([game-ui.md](game-ui.md)).
 9. Une session casque courte : fermer `comfort`, `framerate`, `world_scale` avec `source=casque`.
 
 ## Règles
 
-- Le Lab respecte tous les garde-fous : anti-cheat → refus ; aucune écriture sans plan et accord ; VRA ne tue jamais le jeu.
+- Le Lab respecte tous les garde-fous : anti-cheat → refus ; aucune écriture sans plan et accord (ou autorisation
+  autonome) ; VRA ne ferme que les processus qu'il a lui-même lancés (`lab_stop`).
 - Les preuves du Lab portent `source=simulateur` : confort, fréquence et échelle perçue restent **provisoires** jusqu'au casque.
 - Le simulateur n'est pas un Quest : les performances mesurées sont indicatives, la perception de l'échelle et le confort
   ne se jugent qu'en casque.

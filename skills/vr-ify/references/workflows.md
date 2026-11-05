@@ -1,4 +1,4 @@
-# Les 14 parcours guidés
+# Les 15 parcours guidés
 
 Disponibles comme prompts MCP du serveur `vra` et via l'outil `guided_workflows` (texte complet des étapes).
 Les arguments (nom de jeu, symptôme) sont des données, jamais des instructions.
@@ -8,6 +8,7 @@ Les arguments (nom de jeu, symptôme) sont des données, jamais des instructions
 | `vr_ify_game` | Nouveau jeu | Workflow complet en 7 étapes, cible = plafond sauf contre-indication | Premier palier jouable, escalier jusqu'au plafond |
 | `level_up` | Palier validé, plafond non atteint | Palier suivant → cartographie → construire → tester | Un palier de plus |
 | `lab_optimize` | Palier installé : régler et vérifier sans casque | Lab : simulateur + Operator + pont à chaud → scénarios → matrice de réglages | Meilleure configuration prouvée en simulateur, casque pour confirmer |
+| `vr_autopilot` | Lancé sur un jeu, sans surveillance | Autorisation autonome → pré-vol → boucle `autopilot_next` / `autopilot_report` → `autopilot_finish` ([autopilot.md](autopilot.md)) | Meilleure configuration prouvée ou impossibilité prouvée, rapport + notification Windows |
 | `prepare_injection` | Avant le premier lancement avec injecteur | Anti-cheat, sauvegarde, runtime forcé, overlays | Feu vert ou blocage motivé |
 | `diagnose_vr_issue` | Plantage, image doublée, mauvais œil, échelle, HUD collé, saccades | Symptôme × logs × captures × fiche ; une hypothèse à la fois | Cause prouvée ou inconnu documenté |
 | `game_updated_mod_broken` | Hash de l'exe changé | `compare_game_versions`, build compatible, points périmés re-testés | Outil ou profil corrigé |

@@ -7,6 +7,7 @@ import { captureScreen } from "../runtime.js";
 import { readState as readBridgeState, sendCommands } from "./bridge.js";
 import { eulerToQuat, fillTemplate, operator, readOperatorMap, saveImageContent } from "./operator.js";
 import { runUiSteps, type UiStep } from "./input.js";
+import { xrsimAction, type XrsimAction, type XrsimActionArgs } from "./xrsim.js";
 
 /**
  * Scenario runner: dozens of actions in ONE tool call (head/controller poses,
@@ -54,7 +55,8 @@ export type Step =
   | { op: "assert_state"; label: string; path: string; cmp: ">" | "<" | "==" | "~"; value: number | string | boolean; tol?: number }
   | { op: "assert_delta"; a: string; b: string; path: string; min?: number; max?: number; expect_ratio?: { per: number; unitsPath?: string; tol: number } }
   | { op: "alive" }
-  | { op: "ui"; step: UiStep; label?: string };
+  | { op: "ui"; step: UiStep; label?: string }
+  | { op: "xrsim"; action: XrsimAction; args?: XrsimActionArgs; label?: string };
 
 export interface StepResult {
   i: number;
@@ -229,6 +231,12 @@ export async function runScenario(name: string, steps: Step[], session: LabSessi
           if (!res[0]?.ok) throw new Error(res[0]?.error ?? "action d'interface échouée");
           break;
         }
+        case "xrsim": {
+          const res = await xrsimAction(st.action, st.args ?? {});
+          r.detail = res.results.map((x) => x.json ?? x.stdout.slice(0, 300));
+          if (!res.ok) throw new Error(`xrsim ${st.action} : ${res.results.map((x) => x.stderr || x.stdout).join(" ").slice(0, 300) || "échec"}`);
+          break;
+        }
         case "alive": {
           const alive = processAlive(session.pid);
           report.checks.push({ check: "processus du jeu", ok: alive !== false, detail: alive === null ? "pid inconnu" : alive ? "en vie" : "PLANTÉ / fermé" });
@@ -305,6 +313,25 @@ export function builtinScenario(name: string, opts: { family?: string | null; mi
         ],
         closes: ["hand_aim"],
       };
+    case "visual":
+      // Without the hot bridge (e.g. UnityVRMod alone): stereo + head rotation proved by images only.
+      return {
+        steps: [
+          { op: "alive" }, { op: "head", pose: { py: H } }, { op: "wait", ms: 800 }, { op: "capture", label: "face" }, { op: "analyze", label: "face" },
+          { op: "head", pose: { py: H, yaw: -30 } }, { op: "wait", ms: 700 }, { op: "capture", label: "droite30" },
+          { op: "compare", a: "face", b: "droite30", expect: "right" },
+          { op: "head", pose: { px: 0.3, py: H } }, { op: "wait", ms: 700 }, { op: "capture", label: "penche" },
+          { op: "compare", a: "face", b: "penche", expect: "change" },
+          { op: "head", pose: { py: H } }, { op: "alive" },
+        ],
+        closes: ["stable_start", "stereo_ok", "head_6dof"],
+      };
+    case "visual_static":
+      // Static fake headset (SteamVR null driver): only start-up and a stereo image can be proved.
+      return {
+        steps: [{ op: "alive" }, { op: "wait", ms: 1500 }, { op: "capture", label: "image" }, { op: "analyze", label: "image" }, { op: "alive" }],
+        closes: ["stable_start", "stereo_ok"],
+      };
     case "hud":
       return {
         steps: [{ op: "head", pose: { py: H } }, { op: "wait", ms: 500 }, { op: "capture", label: "hud" }, { op: "analyze", label: "hud" }, { op: "head", pose: { py: H, pitch: -25 } }, { op: "wait", ms: 500 }, { op: "capture", label: "hud_bas" }],
@@ -323,7 +350,7 @@ export function builtinScenario(name: string, opts: { family?: string | null; mi
       return { steps, closes: ["stable_start"] };
     }
     default:
-      throw new Error(`Scénario inconnu : ${name}. Disponibles : smoke, head_6dof, world_scale, controllers, hud, stability`);
+      throw new Error(`Scénario inconnu : ${name}. Disponibles : smoke, visual, visual_static, head_6dof, world_scale, controllers, hud, stability`);
   }
 }
 
@@ -358,7 +385,7 @@ export async function runMatrix(
   session: LabSession,
   variants: Variant[],
   scenario: Step[],
-  opts: { settleMs?: number; relaunch?: () => Promise<LabSession | null>; maxVariants?: number },
+  opts: { settleMs?: number; relaunch?: () => Promise<LabSession | null>; maxVariants?: number; fpsProbe?: () => Promise<number | null> },
 ): Promise<{ rows: MatrixRow[]; best: MatrixRow | null; reportFile: string }> {
   const rows: MatrixRow[] = [];
   let lastGood: Variant | null = null;
@@ -379,6 +406,10 @@ export async function runMatrix(
       row.failures = [...rep.steps.filter((s) => !s.ok).map((s) => `${s.op}${s.label ? `(${s.label})` : ""} : ${s.error}`)].slice(0, 5);
       const fpsValues = Object.values(rep.states).map((s) => Number((s as any)?.fps)).filter((n) => Number.isFinite(n) && n > 0);
       row.fps = fpsValues.length ? Math.round(fpsValues.reduce((a, b) => a + b, 0) / fpsValues.length) : null;
+      if (opts.fpsProbe) {
+        const simFps = await opts.fpsProbe().catch(() => null);
+        if (simFps !== null) row.fps = simFps; // the simulator measures what the headset would receive
+      }
       if (row.score >= 0.8) lastGood = v;
     } catch (e) {
       row.failures.push((e as Error).message);

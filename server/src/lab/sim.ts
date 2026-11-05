@@ -6,6 +6,7 @@ import { pluginRoot, toolsDir } from "../paths.js";
 import { launchGame } from "../runtime.js";
 import { abs, pickMainExe, scanGame } from "../detect/scan.js";
 import { createBackup, restoreBackup, listBackups } from "../backup.js";
+import { registerProcess } from "./processes.js";
 
 const execFileP = promisify(execFile);
 
@@ -178,6 +179,7 @@ export interface LabLaunchResult {
 export function labLaunch(gamePath: string, opts: { runtimeJson: string; operatorLayerDir?: string | null; labDir?: string | null; exe?: string; args?: string[]; injectUevr?: boolean; injectorPath?: string | null }): LabLaunchResult {
   const env = buildLabEnv({ runtimeJson: opts.runtimeJson, operatorLayerDir: opts.operatorLayerDir, labDir: opts.labDir });
   const game = launchGame(gamePath, { exe: opts.exe, args: opts.args, env });
+  if (game.pid) registerProcess({ pid: game.pid, exe: path.basename(game.exe), role: "jeu", gamePath });
   const notes: string[] = [];
   let injector: LabLaunchResult["injector"] = null;
   if (opts.injectUevr) {
@@ -188,6 +190,7 @@ export function labLaunch(gamePath: string, opts: { runtimeJson: string; operato
       const child = spawn(inj, [`--attach=${attach}`], { cwd: path.dirname(inj), detached: true, stdio: "ignore" });
       child.unref();
       injector = { pid: child.pid, exe: inj, attach };
+      if (child.pid) registerProcess({ pid: child.pid, exe: path.basename(inj), role: "injecteur", gamePath });
       notes.push("UEVRInjector attend le processus et injecte automatiquement. Le runtime utilisé est celui coché dans l'injecteur : choisir OpenXR une fois (réglage mémorisé).");
     }
   }

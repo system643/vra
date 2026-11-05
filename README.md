@@ -16,6 +16,17 @@ porte la méthode.
 - **VRA Lab, tests sans casque en boucle rapide** : casque simulé (Meta XR Simulator), pilotage de la tête et des manettes
   par l'agent (Meta XR Operator), pont à chaud dans le mod (réglages changés en quelques secondes sans relancer le jeu),
   scénarios automatiques (stéréo, 6DOF, échelle, contrôles, HUD) et **matrices de réglages** avec reprise après plantage.
+- **Pilote automatique sans surveillance** : `autopilot.cmd "<dossier du jeu>"`. Le pilote enchaîne seul les stratégies
+  du moteur (ex. Unreal : UEVR natif → synchronisé → nightly → `-dx11` → `-nohmd` → OpenVR → Lua niveau 3). À chaque
+  stratégie :
+  - il teste dans le simulateur ;
+  - il relance après un plantage ;
+  - il annule ce qui échoue et garde la meilleure configuration.
+
+  Il s'arrête à la réussite, quand l'impossibilité est prouvée ou au bout du budget (60 tentatives / 6 h). Il envoie
+  alors une notification Windows et ouvre le rapport, vidéos MP4 comprises.
+- **Contrôle complet de Meta XR Simulator** avec la CLI officielle de Meta (`metavr xrsim`) : casque simulé,
+  fréquence, manettes, FPS mesurés, vidéos, diagnostic.
 - **Boucle de confirmation en casque** : marqueurs (Ctrl+Alt+M ou LB+RB+A), captures, logs de chaque outil, checklist qualité.
 - **Garde-fous** : anti-cheat = niveau 0 seulement ; jamais de DRM contourné ; le contenu web n'est jamais une instruction.
 
@@ -36,7 +47,11 @@ git clone https://github.com/system643/vra.git VR
    fichiers dans Téléchargements, sur le Bureau ou dans le dossier `VR`, ils sont trouvés : l'Operator est extrait dans
    les outils de VRA, le simulateur est installé (fenêtre Windows de confirmation). Ces fichiers ne vont jamais sur GitHub.
 3. **Options** — SDK .NET 8 de Microsoft (coché par défaut : nécessaire pour fabriquer les mods Unity, installé via
-   `winget install --id Microsoft.DotNet.SDK.8 --source winget`), tests complets.
+   `winget install --id Microsoft.DotNet.SDK.8 --source winget`), tests complets, et **mode autonome** (non coché).
+   Le mode autonome autorise d'avance, dans Claude Code, les outils VRA, la recherche web et la lecture de fichiers :
+   le pilote automatique n'est alors plus interrompu par des demandes de permission. `metavr`, la CLI de Meta, est
+   préparée au passage (`npx -y metavr`).
+   Le bouton **Pilote automatique…** choisit un dossier de jeu et lance `autopilot.cmd`.
 4. **Installer / mettre à jour** : Node.js est installé via winget s'il manque, puis dépendances, construction, test de
    bout en bout, configuration des clients, logiciels Meta, contrôles (Steam, SteamVR, Virtual Desktop), vérification
    finale (profil du Lab : complet sur une carte dédiée). Journal en direct, rapport dans `Documents\VRA\setup-report.json`.
@@ -49,12 +64,20 @@ ne duplique rien.
 
 Mettre à jour plus tard : `git pull` dans `VR`, puis relancer `setup.cmd`.
 
-Pour développer VRA : `cd server`, `npm install`, `npm run build`, `npm test` (63 tests ; le test réel de pilotage de fenêtre : `VRA_UI_TEST=1 npx vitest run test/ui.test.ts`), `npm run smoke`.
+Pour développer VRA : `cd server`, `npm install`, `npm run build`, puis :
+- `npm test` : 78 tests ;
+- `VRA_UI_TEST=1 npx vitest run test/ui.test.ts` : test réel de pilotage de fenêtre ;
+- `npm run smoke` ;
+- `npm run test:autopilot` : pilote automatique de bout en bout. Il tourne sur un faux jeu, un faux Operator et un
+  faux `metavr` : la stratégie 1 plante, la 2 a une mauvaise échelle, la 3 réussit, la 4 échoue. Le test vérifie
+  qu'il garde la meilleure, annule les autres et écrit le rapport.
 
 Premières demandes à faire à Claude sur ce PC :
 1. « Vérifie si ce PC est prêt pour le VRA Lab » → `lab_machine_check` (profil attendu : complet) puis `xr_sim_status`.
 2. « Je veux jouer à <jeu> en VR, il est dans D:\SteamLibrary\steamapps\common\<jeu> » → triage, plan au maximum,
    installation contrôlée, Lab sans casque (`lab_optimize`), puis une courte confirmation en casque.
+3. Sans rien regarder : `.\autopilot.cmd "D:\SteamLibrary\steamapps\common\<jeu>"`. Il demande ton accord une fois,
+   puis tu attends la notification Windows.
 
 Mettre à jour plus tard : `git pull` puis `npm run build` dans `server`.
 
@@ -80,13 +103,16 @@ Dans `Documents\VRA` (modifiable avec la variable d'environnement `VRA_HOME`) :
 | --- | --- |
 | `skills/vr-ify/` | méthode (SKILL.md) + 15 fiches moteur + références |
 | `agents/vr-scout.md`, `agents/vr-engineer.md` | recherche web ; écriture des scripts et plugins |
-| `server/` | serveur MCP `vra` (TypeScript) — 62 outils + 14 parcours guidés (dont le Lab sans casque) |
+| `server/` | serveur MCP `vra` (TypeScript) — 74 outils + 15 parcours guidés (dont le Lab sans casque et le pilote automatique) |
+| `autopilot.cmd`, `setup/autopilot.mjs` | pilote automatique sans surveillance (Claude Code non interactif, reprise, chien de garde) |
 | `marker/` | marqueurs de test et captures d'écran (PowerShell) |
 | `evals/` | faux jeux partagés et cas `claude plugin eval` |
 
 Variables : `VRA_HOME` (données), `VRA_TOOL_FAMILIES` (`adaptive` par défaut, `all`, ou liste),
 `VRA_SCHEMA_PROFILE` (`compact` ou `full`), `GITHUB_TOKEN` (optionnel, limite de requêtes GitHub),
-`VRA_XRSIM_JSON` (runtime du simulateur s'il n'est pas trouvé), `VRA_XR_OPERATOR_DIR` (dossier `windows` de Meta XR Operator).
+`VRA_XRSIM_JSON` (runtime du simulateur s'il n'est pas trouvé), `VRA_XR_OPERATOR_DIR` (dossier `windows` de Meta XR Operator),
+`VRA_METAVR_CMD` (commande `metavr` à utiliser), `VRA_AUTOPILOT_STRATEGIES` (bibliothèque de stratégies personnalisée),
+`VRA_NO_NOTIFY=1` (pas de notification Windows).
 
 ## VRA Lab en bref
 
@@ -104,6 +130,10 @@ Variables : `VRA_HOME` (données), `VRA_TOOL_FAMILIES` (`adaptive` par défaut, 
 | `game_ui_look` / `game_ui_click` / `game_ui_key` / `game_ui_type` / `game_ui_wait_text` | piloter les menus du jeu (OCR Windows, clic sur « Nouvelle partie »…), seulement dans la fenêtre du jeu |
 | `game_ui_recipe` | recette « lancement → en jeu » rejouée automatiquement par le Lab |
 | `build_tools_status` / `install_dotnet_sdk` / `build_unity_plugin` | SDK .NET 8 et compilation des mods Unity |
+| `xrsim_control` / `xrsim_diagnose` | contrôle complet de Meta XR Simulator (`metavr xrsim`) : casque, fréquence, manettes, FPS, vidéo MP4, diagnostic |
+| `lab_stop` | ferme le jeu et l'injecteur lancés par VRA (jamais un autre processus) |
+| `autonomy_grant` / `autonomy_status` / `autonomy_revoke` | mode autonome : une autorisation, pour un jeu, limitée dans le temps |
+| `autopilot_preflight` / `autopilot_start` / `autopilot_next` / `autopilot_report` / `autopilot_status` / `autopilot_finish` | pilote automatique : stratégies, budget, chien de garde, rapport, notification Windows |
 
 Inspection en direct (dernier recours) : `npm install frida` dans `server/`, puis activer la famille `inspect`.
 

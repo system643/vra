@@ -194,29 +194,30 @@ $grpOpt = New-Object System.Windows.Forms.GroupBox
 $grpOpt.Text = "3. Options"
 $grpOpt.Font = $bold
 $grpOpt.Location = New-Object System.Drawing.Point(16, 330)
-$grpOpt.Size = New-Object System.Drawing.Size(852, 62)
+$grpOpt.Size = New-Object System.Drawing.Size(852, 86)
 $form.Controls.Add($grpOpt)
-function New-Opt([string]$text, [int]$x, [bool]$checked) {
+function New-Opt([string]$text, [int]$x, [bool]$checked, [int]$y = 26) {
     $cb = New-Object System.Windows.Forms.CheckBox
     $cb.Font = $font
     $cb.Text = $text
     $cb.Checked = $checked
     $cb.AutoSize = $true
-    $cb.Location = New-Object System.Drawing.Point($x, 26)
+    $cb.Location = New-Object System.Drawing.Point($x, $y)
     $grpOpt.Controls.Add($cb)
     return $cb
 }
 $optSim = New-Opt "Installer Meta XR Simulator s'il est trouvé" 12 $true
 $optDotnet = New-Opt "Installer le SDK .NET 8 (mods Unity)" 320 $true
 $optTests = New-Opt "Tests complets (plus long)" 610 $false
+$optAuto = New-Opt "Mode autonome : le pilote automatique ne demande plus de permission (outils VRA, recherche web, lecture)" 12 $false 54
 
 # Journal
 $log = New-Object System.Windows.Forms.RichTextBox
 $log.ReadOnly = $true
 $log.Font = New-Object System.Drawing.Font("Consolas", 9)
 $log.BackColor = [System.Drawing.Color]::White
-$log.Location = New-Object System.Drawing.Point(16, 400)
-$log.Size = New-Object System.Drawing.Size(852, 250)
+$log.Location = New-Object System.Drawing.Point(16, 424)
+$log.Size = New-Object System.Drawing.Size(852, 222)
 $log.Anchor = "Top,Bottom,Left,Right"
 $form.Controls.Add($log)
 
@@ -224,7 +225,7 @@ $progress = New-Object System.Windows.Forms.ProgressBar
 $progress.Style = "Marquee"
 $progress.MarqueeAnimationSpeed = 0
 $progress.Location = New-Object System.Drawing.Point(16, 658)
-$progress.Size = New-Object System.Drawing.Size(300, 26)
+$progress.Size = New-Object System.Drawing.Size(150, 26)
 $progress.Anchor = "Bottom,Left"
 $form.Controls.Add($progress)
 
@@ -243,6 +244,15 @@ $btnDry = New-Btn "Simulation" 538 110
 $btnUninstall = New-Btn "Désinstaller" 656 110
 $btnClose = New-Btn "Fermer" 774 94
 $btnClose.Add_Click({ $form.Close() })
+$btnPilot = New-Btn "Pilote automatique…" 174 150
+$btnPilot.Add_Click({
+    $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dlg.Description = "Dossier d'installation du jeu à mettre en VR (pilote automatique, sans surveillance)"
+    if ($dlg.ShowDialog() -eq "OK") {
+        $cmdArg = '""' + (Join-Path $Repo "autopilot.cmd") + '" "' + $dlg.SelectedPath + '""'
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/k", $cmdArg -WorkingDirectory $Repo
+    }
+})
 
 function Add-Log([string]$text, [System.Drawing.Color]$color) {
     $log.SelectionStart = $log.TextLength
@@ -326,6 +336,7 @@ function Start-Setup([string]$mode) {
         if ($optSim.Checked) { $argList += "--install-simulator" }
         if ($optDotnet.Checked) { $argList += "--dotnet" } else { $argList += "--no-dotnet" }
         if ($optTests.Checked) { $argList += "--full-tests" }
+        if ($optAuto.Checked) { $argList += "--autonomous" }
     }
     $script:lastMode = $mode
     $script:outFile = Join-Path $env:TEMP ("vra-setup-" + [guid]::NewGuid().ToString("N") + ".log")
